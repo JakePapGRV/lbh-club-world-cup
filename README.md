@@ -6,6 +6,7 @@ snake order, then earn points as your nations win through the tournament.
 - **Draft room** — random order, then snake (1-2-3-4-5, 5-4-3-2-1, …), 9 teams each.
 - **Ladder** — live points table.
 - **Fixtures** — every match with the owner overlay (e.g. *Australia vs USA = Jake vs Mickey*).
+- **Bracket** — the knockout tree (R32 → Final + 3rd place), advancing team highlighted, owner overlay per nation.
 - **Admin** — start/reset the draft, edit player names, enter scores, settings.
 
 ## Scoring
@@ -103,5 +104,5 @@ different zone.
 - ✅ Rules engine (draft order + scoring), fully tested
 - ✅ Draft room, ladder, fixtures (sorted by kickoff time), admin score entry
 - ✅ Live score auto-sync + official 2026 teams/fixtures import from the API
+- ✅ Knockout bracket page (R32 → Final + 3rd place, owner overlay)
 - ⬜ Verify against the live API once a token + real fixtures are available
-- ⬜ Knockout bracket UI niceties (data flows through; display is functional)

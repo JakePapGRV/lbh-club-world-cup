@@ -193,6 +193,64 @@ export async function getFixturesView() {
   return Object.entries(groups).map(([title, items]) => ({ title, fixtures: items }));
 }
 
+// Knockout rounds in bracket order, with the expected match count and points.
+const KO_ROUNDS = [
+  { stage: 'R32', label: 'Round of 32', expected: 16, pts: 1 },
+  { stage: 'R16', label: 'Round of 16', expected: 8, pts: 2 },
+  { stage: 'QF', label: 'Quarter-finals', expected: 4, pts: 3 },
+  { stage: 'SF', label: 'Semi-finals', expected: 2, pts: 4 },
+  { stage: 'final', label: 'Final', expected: 1, pts: 5 },
+];
+
+/** Knockout fixtures laid out as bracket rounds (padded with TBD slots). */
+export async function getBracket() {
+  const players = await getPlayers();
+  const nameById = Object.fromEntries(players.map((p) => [p.id, p.name]));
+
+  const { rows } = await query(`
+    SELECT f.id, f.stage, f.status, f.kickoff,
+           f.home_team_id, f.away_team_id, f.home_score, f.away_score, f.winner_team_id,
+           ht.name AS home_name, at.name AS away_name,
+           hp.player_id AS home_owner_id, ap.player_id AS away_owner_id
+    FROM fixtures f
+    LEFT JOIN teams ht ON ht.id = f.home_team_id
+    LEFT JOIN teams at ON at.id = f.away_team_id
+    LEFT JOIN picks hp ON hp.team_id = f.home_team_id
+    LEFT JOIN picks ap ON ap.team_id = f.away_team_id
+    WHERE f.stage IN ('R32', 'R16', 'QF', 'SF', 'third', 'final')
+    ORDER BY f.kickoff ASC NULLS LAST, f.id`);
+
+  const decorate = (r) => {
+    const d = r.kickoff ? new Date(r.kickoff) : null;
+    return {
+      id: r.id,
+      stage: r.stage,
+      status: r.status,
+      home_name: r.home_name,
+      away_name: r.away_name,
+      home_owner: r.home_owner_id ? nameById[r.home_owner_id] : null,
+      away_owner: r.away_owner_id ? nameById[r.away_owner_id] : null,
+      home_score: r.home_score,
+      away_score: r.away_score,
+      home_is_winner: r.winner_team_id != null && r.winner_team_id === r.home_team_id,
+      away_is_winner: r.winner_team_id != null && r.winner_team_id === r.away_team_id,
+      date_label: d ? DATE_FMT.format(d) : '',
+      time_label: d ? TIME_FMT.format(d) : '',
+    };
+  };
+
+  const byStage = {};
+  for (const r of rows) (byStage[r.stage] ||= []).push(decorate(r));
+
+  const rounds = KO_ROUNDS.map((rd) => {
+    const matches = (byStage[rd.stage] || []).slice();
+    while (matches.length < rd.expected) matches.push({ tbd: true, stage: rd.stage });
+    return { ...rd, matches };
+  });
+
+  return { rounds, thirdPlace: (byStage.third || [])[0] || null, hasAny: rows.length > 0 };
+}
+
 export async function getLadder() {
   const settings = await getSettings();
   const players = await getPlayers();

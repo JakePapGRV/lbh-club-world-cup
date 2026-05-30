@@ -177,6 +177,36 @@ ul.fixtures { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.5re
 .owners .unowned { color: var(--muted); }
 .owners .vs { color: var(--muted); }
 
+/* ---------- bracket ---------- */
+.bracket { display: flex; flex-direction: column; gap: 1.5rem; }
+.round-label { font-size: 0.95rem; margin: 0 0 0.6rem; display: flex; align-items: center; gap: 0.5rem; color: var(--text); }
+.round-label::before { content: ""; width: 4px; height: 1em; background: var(--gold); border-radius: 2px; }
+.round-pts { margin-left: auto; font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--gold-light); background: var(--panel-2); border-radius: 999px; padding: 0.1rem 0.5rem; }
+.round-matches { display: flex; flex-direction: column; gap: 0.5rem; }
+
+.ko-match { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.ko-match.played { border-color: var(--gold); }
+.ko-match.is-tbd { opacity: 0.55; border-style: dashed; }
+.ko-when { font-size: 0.68rem; color: var(--muted); padding: 0.25rem 0.6rem 0; }
+.ko-side { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 0.5rem; padding: 0.4rem 0.6rem; }
+.ko-side + .ko-side { border-top: 1px solid var(--line); }
+.ko-side .ko-team { font-weight: 700; }
+.ko-side .ko-owner { font-size: 0.75rem; color: var(--gold-light); justify-self: end; }
+.ko-side .ko-score { min-width: 1.2rem; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--muted); }
+.ko-side.win { background: linear-gradient(90deg, rgba(245, 183, 49, 0.16), transparent); }
+.ko-side.win .ko-team { color: var(--gold-light); }
+.ko-side.win .ko-team::after { content: " ▸"; color: var(--gold); }
+.ko-side.win .ko-score { color: var(--gold-light); }
+.ko-side.tbd .ko-team { color: var(--muted); font-weight: 600; }
+
+.third-place { margin-top: 1.5rem; max-width: 360px; }
+
+@media (min-width: 900px) {
+  .bracket { flex-direction: row; align-items: stretch; gap: 1rem; overflow-x: auto; padding-bottom: 0.5rem; }
+  .round { min-width: 210px; flex: 1; display: flex; flex-direction: column; }
+  .round-matches { flex: 1; justify-content: space-around; }
+}
+
 /* ---------- draft ---------- */
 .draft-head { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
 .draft-head form { margin: 0; }
