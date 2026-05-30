@@ -37,7 +37,7 @@ router.post('/import', async (req, res, next) => {
 router.post('/sync', async (req, res, next) => {
   try {
     const r = await syncFromApi();
-    res.redirect(`/admin?ok=${encodeURIComponent(`Synced ${r.updated} finished match(es).`)}`);
+    res.redirect(`/admin?ok=${encodeURIComponent(`Sync done: ${r.updated} updated, ${r.inserted} new fixture(s).`)}`);
   } catch (err) {
     res.redirect(`/admin?err=${encodeURIComponent(err.message)}`);
   }

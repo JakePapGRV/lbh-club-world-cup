@@ -58,8 +58,8 @@ function startScoreSync() {
   }
   cron.schedule(expr, async () => {
     try {
-      const { updated } = await syncFromApi();
-      if (updated) console.log(`[sync] updated ${updated} fixture(s) from ${name}`);
+      const { updated, inserted } = await syncFromApi();
+      if (updated || inserted) console.log(`[sync] ${name}: ${updated} updated, ${inserted} new fixture(s)`);
     } catch (err) {
       console.error('[sync] failed:', err.message);
     }

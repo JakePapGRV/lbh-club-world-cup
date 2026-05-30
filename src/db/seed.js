@@ -57,25 +57,13 @@ export async function seed() {
     );
   }
 
-  // Placeholder Round of 32: top 32 ranked teams, classic 1-v-32 seeding, so the
-  // bracket page shows real teams + owners in the test run. Later rounds are
-  // rendered as TBD by the bracket itself. Real knockouts come from the import.
-  const ranked = teamRows
-    .map((r, i) => ({ id: r.id, ranking: TEAMS[i].ranking }))
-    .sort((a, b) => a.ranking - b.ranking)
-    .slice(0, 32);
-  const R32_BASE = Date.UTC(2026, 5, 29, 9, 0, 0); // 29 Jun 2026
-  for (let i = 0; i < 16; i++) {
-    const kickoff = new Date(R32_BASE + Math.floor(i / 4) * DAY_MS + (i % 4) * 3 * 3600000);
-    await query(
-      `INSERT INTO fixtures (stage, kickoff, home_team_id, away_team_id)
-       VALUES ('R32', $1, $2, $3)`,
-      [kickoff.toISOString(), ranked[i].id, ranked[31 - i].id]
-    );
-  }
+  // No knockout fixtures are seeded: the Round of 32 onwards depends on group
+  // results, so those teams are unknown until the tournament. The bracket page
+  // shows the empty TBD structure until the real knockout fixtures arrive via
+  // the API import.
 
   console.log(
-    `Seeded ${DEFAULT_PLAYERS.length} players, ${TEAMS.length} teams, ${fixtures.length} group fixtures, 16 R32 fixtures.`
+    `Seeded ${DEFAULT_PLAYERS.length} players, ${TEAMS.length} teams, ${fixtures.length} group fixtures.`
   );
 }
 

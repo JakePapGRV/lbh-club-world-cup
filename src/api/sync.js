@@ -94,27 +94,69 @@ export async function importMatches(matches) {
 }
 
 /**
- * Update scores for FINISHED matches, matched to our fixtures by API id.
- * Safe to run repeatedly (this is what the cron job calls).
+ * Keep fixtures in step with the API, matched by API id. Safe to run repeatedly
+ * during the tournament (this is what the cron job + "Sync now" call). It:
+ *   - inserts fixtures that didn't exist at import time (e.g. knockout ties
+ *     created once the bracket is drawn),
+ *   - fills in knockout participants as they get confirmed (resolving teams by
+ *     their API id — teams themselves are never changed here),
+ *   - records final scores + the advancing team for finished matches,
+ *   - never clobbers an existing score for a match the API hasn't finished yet
+ *     (so a manual entry survives until the API catches up).
+ * It does NOT touch teams or picks, so it's safe after the draft is locked.
  */
 export async function syncScores(matches) {
+  const teamRows = (await query('SELECT id, api_id FROM teams WHERE api_id IS NOT NULL')).rows;
+  const teamIdByApi = new Map(teamRows.map((r) => [String(r.api_id), r.id]));
+  const resolve = (apiId) => (apiId != null ? teamIdByApi.get(String(apiId)) ?? null : null);
+
   let updated = 0;
+  let inserted = 0;
   for (const m of matches) {
-    if (!m.finished) continue;
-    const fx = (
-      await query('SELECT id, home_team_id, away_team_id FROM fixtures WHERE api_id = $1', [m.apiId])
-    ).rows[0];
-    if (!fx) continue;
-    await query(
-      `UPDATE fixtures
-          SET home_score = $1, away_score = $2, winner_team_id = $3,
-              status = 'finished', updated_at = now()
-        WHERE id = $4`,
-      [m.homeScore, m.awayScore, winnerTeamId(m, fx.home_team_id, fx.away_team_id), fx.id]
-    );
+    if (!m.stage) continue; // skip matches whose stage we couldn't map
+    const homeId = resolve(m.home.apiId);
+    const awayId = resolve(m.away.apiId);
+    const existing = (await query('SELECT id FROM fixtures WHERE api_id = $1', [m.apiId])).rows[0];
+
+    if (!existing) {
+      await query(
+        `INSERT INTO fixtures (api_id, stage, grp, kickoff, home_team_id, away_team_id,
+                               home_score, away_score, winner_team_id, status)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+        [
+          m.apiId, m.stage, m.group, m.utcDate, homeId, awayId,
+          m.finished ? m.homeScore : null,
+          m.finished ? m.awayScore : null,
+          m.finished ? winnerTeamId(m, homeId, awayId) : null,
+          m.finished ? 'finished' : 'scheduled',
+        ]
+      );
+      inserted += 1;
+      continue;
+    }
+
+    if (m.finished) {
+      await query(
+        `UPDATE fixtures
+            SET stage = $1, grp = $2, kickoff = $3, home_team_id = $4, away_team_id = $5,
+                home_score = $6, away_score = $7, winner_team_id = $8,
+                status = 'finished', updated_at = now()
+          WHERE id = $9`,
+        [m.stage, m.group, m.utcDate, homeId, awayId, m.homeScore, m.awayScore, winnerTeamId(m, homeId, awayId), existing.id]
+      );
+    } else {
+      // Refresh matchup/kickoff (e.g. knockout teams getting confirmed) without
+      // touching the score/status, so a finished or manually-entered result stays.
+      await query(
+        `UPDATE fixtures
+            SET stage = $1, grp = $2, kickoff = $3, home_team_id = $4, away_team_id = $5, updated_at = now()
+          WHERE id = $6`,
+        [m.stage, m.group, m.utcDate, homeId, awayId, existing.id]
+      );
+    }
     updated += 1;
   }
-  return { updated };
+  return { updated, inserted };
 }
 
 // Fetch-and-do helpers used by the cron job and the admin buttons. They pick the

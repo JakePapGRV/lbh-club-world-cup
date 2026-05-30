@@ -83,3 +83,21 @@ test('import builds teams + fixtures; finished results carry through; sync updat
   assert.equal(updated.status, 'finished');
   assert.equal(updated.away_score, 3);
 });
+
+test('syncScores inserts a newly-created knockout fixture and resolves teams by API id', async () => {
+  // ARG(1) and ESP(3) were created by the import test above (same DB).
+  const ko = {
+    apiId: '7100', utcDate: '2026-07-05T19:00:00Z', status: 'FINISHED', finished: true,
+    stage: 'R16', group: null,
+    home: { apiId: '1', name: 'Argentina', code: 'ARG' },
+    away: { apiId: '3', name: 'Spain', code: 'ESP' },
+    homeScore: 0, awayScore: 2, winnerSide: 'AWAY_TEAM',
+  };
+  const r = await syncScores([ko]);
+  assert.ok(r.inserted >= 1);
+  const fx = (await query("SELECT * FROM fixtures WHERE api_id = '7100'")).rows[0];
+  assert.equal(fx.stage, 'R16');
+  assert.equal(fx.status, 'finished');
+  const esp = (await query("SELECT id FROM teams WHERE api_id = '3'")).rows[0];
+  assert.equal(fx.winner_team_id, esp.id);
+});
