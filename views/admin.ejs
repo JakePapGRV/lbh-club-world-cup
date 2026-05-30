@@ -5,11 +5,12 @@
 <% if (problem) { %><div class="banner err"><%= problem %></div><% } %>
 
 <section class="card">
-  <h2>Live scores</h2>
+  <% const envVar = providerName === 'football-data' ? 'FOOTBALL_DATA_TOKEN' : 'SPORTMONKS_TOKEN'; %>
+  <h2>Live scores <span class="provider-tag"><%= providerName %></span></h2>
   <% if (tokenSet) { %>
-    <p class="hint">football-data.org token detected — scores auto-sync on a timer. You can also trigger a sync now.</p>
+    <p class="hint">API token detected — scores auto-sync on a timer. You can also trigger a sync now.</p>
   <% } else { %>
-    <p class="hint">No API token set. Add <code>FOOTBALL_DATA_TOKEN</code> to your environment to enable automatic scores. Manual entry below always works as a fallback.</p>
+    <p class="hint">No API token set. Add <code><%= envVar %></code> to your environment to enable automatic scores. Manual entry below always works as a fallback.</p>
   <% } %>
   <div class="btnrow">
     <form method="post" action="/admin/sync"><button <%= tokenSet ? '' : 'disabled' %>>Sync scores now</button></form>

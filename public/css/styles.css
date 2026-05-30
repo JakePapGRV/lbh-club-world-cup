@@ -140,6 +140,7 @@ button[disabled] { opacity: 0.45; cursor: not-allowed; }
 .banner.ok { background: rgba(47, 161, 92, 0.18); border: 1px solid var(--green); color: #cfeedd; }
 .banner.err { background: rgba(229, 86, 75, 0.15); border: 1px solid var(--red); color: #f3c9c5; }
 code { background: var(--panel-2); border-radius: 5px; padding: 0.05rem 0.35rem; font-size: 0.85em; }
+.provider-tag { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.08em; background: var(--panel-2); color: var(--gold-light); border-radius: 999px; padding: 0.1rem 0.5rem; font-weight: 700; }
 
 .rank { color: var(--gold); font-weight: 800; font-size: 0.74rem; }
 .code { display: inline-block; background: var(--panel-2); border-radius: 5px; padding: 0 0.35rem; font-size: 0.72rem; font-weight: 700; color: var(--muted); }

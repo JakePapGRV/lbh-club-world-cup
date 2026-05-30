@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 import { seedIfEmpty } from './db/seed.js';
-import { syncFromApi } from './api/sync.js';
+import { syncFromApi, scoreProviderStatus } from './api/sync.js';
 import { attachLocals } from './middleware.js';
 import pageRoutes from './routes/pages.js';
 import authRoutes from './routes/auth.js';
@@ -46,10 +46,10 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 3000;
 
 function startScoreSync() {
-  const token = process.env.FOOTBALL_DATA_TOKEN;
+  const { name, tokenSet } = scoreProviderStatus();
   const expr = process.env.SCORE_SYNC_CRON || '*/5 * * * *';
-  if (!token) {
-    console.log('[sync] auto score sync disabled (set FOOTBALL_DATA_TOKEN to enable).');
+  if (!tokenSet) {
+    console.log(`[sync] auto score sync disabled (no token for provider "${name}").`);
     return;
   }
   if (!cron.validate(expr)) {
@@ -58,13 +58,13 @@ function startScoreSync() {
   }
   cron.schedule(expr, async () => {
     try {
-      const { updated } = await syncFromApi(token);
-      if (updated) console.log(`[sync] updated ${updated} fixture(s) from football-data.org`);
+      const { updated } = await syncFromApi();
+      if (updated) console.log(`[sync] updated ${updated} fixture(s) from ${name}`);
     } catch (err) {
       console.error('[sync] failed:', err.message);
     }
   });
-  console.log(`[sync] auto score sync enabled (${expr}).`);
+  console.log(`[sync] auto score sync enabled via ${name} (${expr}).`);
 }
 
 seedIfEmpty()

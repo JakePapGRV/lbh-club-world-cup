@@ -1,6 +1,22 @@
 import { query, withTransaction } from '../db/index.js';
-import { fetchMatches } from './footballData.js';
+import * as footballData from './footballData.js';
+import * as sportmonks from './sportmonks.js';
 import { rankFor } from '../data/fifaRankings.js';
+
+// Which score provider is active, and its token. Defaults to SportMonks.
+function activeProvider() {
+  const name = (process.env.SCORE_PROVIDER || 'sportmonks').toLowerCase();
+  if (name === 'football-data') {
+    return { name: 'football-data', fetch: footballData.fetchMatches, token: process.env.FOOTBALL_DATA_TOKEN };
+  }
+  return { name: 'sportmonks', fetch: sportmonks.fetchMatches, token: process.env.SPORTMONKS_TOKEN };
+}
+
+/** For the UI / startup logging: which provider and whether its token is set. */
+export function scoreProviderStatus() {
+  const p = activeProvider();
+  return { name: p.name, tokenSet: Boolean(p.token) };
+}
 
 /** Map a normalised match's winner side to a concrete team id (null = draw/unknown). */
 function winnerTeamId(match, homeId, awayId) {
@@ -101,10 +117,15 @@ export async function syncScores(matches) {
   return { updated };
 }
 
-// Fetch-and-do helpers used by the cron job and the admin buttons.
-export async function importFromApi(token) {
-  return importMatches(await fetchMatches(token));
+// Fetch-and-do helpers used by the cron job and the admin buttons. They pick the
+// active provider (SportMonks by default) and read its token from the env.
+export async function importFromApi() {
+  const p = activeProvider();
+  if (!p.token) throw new Error(`No API token set for provider "${p.name}".`);
+  return importMatches(await p.fetch(p.token));
 }
-export async function syncFromApi(token) {
-  return syncScores(await fetchMatches(token));
+export async function syncFromApi() {
+  const p = activeProvider();
+  if (!p.token) throw new Error(`No API token set for provider "${p.name}".`);
+  return syncScores(await p.fetch(p.token));
 }

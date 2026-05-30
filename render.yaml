@@ -16,8 +16,10 @@ services:
         sync: false # set this yourself in the Render dashboard
       - key: SESSION_SECRET
         generateValue: true
-      - key: FOOTBALL_DATA_TOKEN
-        sync: false # paste your football-data.org token in the dashboard
+      - key: SCORE_PROVIDER
+        value: sportmonks
+      - key: SPORTMONKS_TOKEN
+        sync: false # paste your SportMonks token in the dashboard
       - key: SCORE_SYNC_CRON
         value: "*/5 * * * *"
 
