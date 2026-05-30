@@ -71,18 +71,32 @@ npm test
 See `.env.example`. Key ones: `DATABASE_URL`, `ADMIN_PASSWORD`, `SESSION_SECRET`,
 `FOOTBALL_DATA_TOKEN`.
 
-## Live scores (football-data.org)
+## Live scores
 
-1. Get a free token at [football-data.org](https://www.football-data.org/client/register).
-2. Set `FOOTBALL_DATA_TOKEN` (locally in `.env`, on Render in the dashboard).
-3. **Before drafting**, go to **Admin → Live scores → Import 2026 data** to pull
-   the official teams + fixtures (replaces the placeholder data; FIFA rankings
-   are enriched from `src/data/fifaRankings.js`).
-4. During the tournament, scores **auto-sync** every few minutes (`SCORE_SYNC_CRON`).
-   You can also hit **Sync scores now**, and manual entry remains as a fallback.
+The default provider is **SportMonks** (`SCORE_PROVIDER=sportmonks`); set
+`SCORE_PROVIDER=football-data` to use football-data.org instead.
+
+1. Get a SportMonks token (a plan that covers the FIFA World Cup) and set
+   `SPORTMONKS_TOKEN` (locally in `.env`, on Render in the dashboard).
+   *(For football-data.org use `FOOTBALL_DATA_TOKEN` instead.)*
+2. **Before drafting**, go to **Admin → Live scores → Import 2026 data** to pull
+   the official teams + fixtures (replaces the placeholder data; matched to the
+   World Cup league `26618`, FIFA rankings enriched from `src/data/fifaRankings.js`).
+3. During the tournament, scores **auto-sync** every few minutes (`SCORE_SYNC_CRON`)
+   from `/fixtures/between` (covers finished, in-play and upcoming). You can also
+   hit **Sync scores now**, and manual entry remains as a fallback.
+
+SportMonks tuning (optional env): `SPORTMONKS_WC_LEAGUE_ID` (default 26618),
+`SPORTMONKS_WC_FROM` / `SPORTMONKS_WC_TO` (tournament window).
 
 Fixture times are shown in AEST — change `DISPLAY_TZ` in `src/repo.js` for a
 different zone.
+
+> **Calibration note:** the SportMonks mapping is built to the documented v3
+> shape and unit-tested with mock payloads, but hasn't been run against the live
+> feed. The likely spot needing a tweak is the knockout **stage names**
+> (`mapStageName` in `src/api/sportmonks.js`) — after the first real import,
+> check the bracket on the Fixtures page.
 
 ## Status / roadmap
 
