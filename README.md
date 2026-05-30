@@ -71,9 +71,23 @@ npm test
 See `.env.example`. Key ones: `DATABASE_URL`, `ADMIN_PASSWORD`, `SESSION_SECRET`,
 `FOOTBALL_DATA_TOKEN`.
 
+## Live scores (football-data.org)
+
+1. Get a free token at [football-data.org](https://www.football-data.org/client/register).
+2. Set `FOOTBALL_DATA_TOKEN` (locally in `.env`, on Render in the dashboard).
+3. **Before drafting**, go to **Admin → Live scores → Import 2026 data** to pull
+   the official teams + fixtures (replaces the placeholder data; FIFA rankings
+   are enriched from `src/data/fifaRankings.js`).
+4. During the tournament, scores **auto-sync** every few minutes (`SCORE_SYNC_CRON`).
+   You can also hit **Sync scores now**, and manual entry remains as a fallback.
+
+Fixture times are shown in AEST — change `DISPLAY_TZ` in `src/repo.js` for a
+different zone.
+
 ## Status / roadmap
 
 - ✅ Rules engine (draft order + scoring), fully tested
-- ✅ Draft room, ladder, fixtures, admin score entry
-- ⬜ Live score auto-sync from football-data.org (manual entry works today)
-- ⬜ Real 2026 teams/fixtures import + knockout bracket (placeholder data for now)
+- ✅ Draft room, ladder, fixtures (sorted by kickoff time), admin score entry
+- ✅ Live score auto-sync + official 2026 teams/fixtures import from the API
+- ⬜ Verify against the live API once a token + real fixtures are available
+- ⬜ Knockout bracket UI niceties (data flows through; display is functional)
