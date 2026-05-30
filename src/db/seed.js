@@ -39,17 +39,27 @@ export async function seed() {
     teamRows.push(rows[0]);
   }
 
-  // Group fixtures (round-robin). Ordered by matchday then group, then given a
-  // placeholder kickoff schedule (4 matches/day from 11 Jun 2026) so the
-  // fixtures page can sort by game time. Real kickoffs come from the API import.
+  // Group fixtures (round-robin), spread across the real group-stage window
+  // (11–27 Jun 2026) by matchday, four kickoffs a day. UTC slots are chosen so
+  // the AEST display lands on realistic morning viewing times (a North-American
+  // evening kickoff is an Australian morning). These are placeholders — the API
+  // import replaces them with the official schedule.
   const fixtures = generateGroupFixtures(teamRows).sort(
     (a, b) => a.matchday - b.matchday || a.grp.localeCompare(b.grp)
   );
-  const FIRST_KICKOFF = Date.UTC(2026, 5, 11, 9, 0, 0); // 11 Jun 2026 09:00 UTC
   const DAY_MS = 86400000;
-  for (let i = 0; i < fixtures.length; i++) {
-    const fx = fixtures[i];
-    const kickoff = new Date(FIRST_KICKOFF + Math.floor(i / 4) * DAY_MS + (i % 4) * 3 * 3600000);
+  const MATCHDAY_START = {
+    1: Date.UTC(2026, 5, 11), // 11 Jun
+    2: Date.UTC(2026, 5, 17), // 17 Jun
+    3: Date.UTC(2026, 5, 23), // 23 Jun
+  };
+  const SLOT_HOURS = [16, 19, 22, 25]; // UTC → ~02:00, 05:00, 08:00, 11:00 AEST
+  const perMatchday = { 1: 0, 2: 0, 3: 0 };
+  for (const fx of fixtures) {
+    const idx = perMatchday[fx.matchday]++;
+    const kickoff = new Date(
+      MATCHDAY_START[fx.matchday] + Math.floor(idx / 4) * DAY_MS + SLOT_HOURS[idx % 4] * 3600000
+    );
     await query(
       `INSERT INTO fixtures (stage, grp, matchday, kickoff, home_team_id, away_team_id)
        VALUES ($1, $2, $3, $4, $5, $6)`,
