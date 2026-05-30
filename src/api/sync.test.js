@@ -69,9 +69,9 @@ test('import builds teams + fixtures; finished results carry through; sync updat
   const final = (await query("SELECT * FROM fixtures WHERE api_id = '1003'")).rows[0];
   assert.equal(final.winner_team_id, esp.id);
 
-  // Ranking enrichment applied (Argentina -> 1).
+  // Ranking enrichment applied (Argentina -> 3 in the Apr 2026 table).
   const argRank = (await query("SELECT ranking FROM teams WHERE api_id = '1'")).rows[0].ranking;
-  assert.equal(argRank, 1);
+  assert.equal(argRank, 3);
 
   // The scheduled match becomes finished -> sync updates it, leaves others alone.
   const later = matches.map((m) =>

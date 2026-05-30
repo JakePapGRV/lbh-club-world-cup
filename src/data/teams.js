@@ -1,76 +1,66 @@
-// PLACEHOLDER seed data for the test run.
+// The 48 nations qualified for the 2026 FIFA World Cup, each with its FIFA world
+// ranking (FIFA/ESPN, April 2026 — the last update before the tournament). The
+// draft lists teams best-ranked first.
 //
-// The 2026 World Cup has 48 teams in 12 groups (A–L) of 4. The group
-// assignments and `ranking` values below are approximate placeholders so you
-// can test the draft + ladder end to end before the tournament. For the live
-// competition the real teams, groups, fixtures and rankings are pulled from the
-// football data API.
+// `grp` here is a PLACEHOLDER even spread across groups A–L (it only affects the
+// placeholder group fixtures used for the test run). The real groups, fixtures
+// and any ranking refresh come from the SportMonks import before the tournament.
 //
-// `ranking` is the FIFA world ranking (1 = best). The draft lists available
-// teams by this ranking rather than by group.
-
-export const TEAMS = [
-  // Group A
-  { name: 'Mexico', code: 'MEX', grp: 'A', ranking: 17 },
-  { name: 'Croatia', code: 'CRO', grp: 'A', ranking: 11 },
-  { name: 'South Korea', code: 'KOR', grp: 'A', ranking: 22 },
-  { name: 'Ghana', code: 'GHA', grp: 'A', ranking: 38 },
-  // Group B
-  { name: 'Canada', code: 'CAN', grp: 'B', ranking: 31 },
-  { name: 'Belgium', code: 'BEL', grp: 'B', ranking: 8 },
-  { name: 'Morocco', code: 'MAR', grp: 'B', ranking: 12 },
-  { name: 'Saudi Arabia', code: 'KSA', grp: 'B', ranking: 39 },
-  // Group C
-  { name: 'United States', code: 'USA', grp: 'C', ranking: 15 },
-  { name: 'Netherlands', code: 'NED', grp: 'C', ranking: 7 },
-  { name: 'Japan', code: 'JPN', grp: 'C', ranking: 18 },
-  { name: 'Egypt', code: 'EGY', grp: 'C', ranking: 36 },
-  // Group D
-  { name: 'Argentina', code: 'ARG', grp: 'D', ranking: 1 },
-  { name: 'Australia', code: 'AUS', grp: 'D', ranking: 24 },
-  { name: 'Nigeria', code: 'NGA', grp: 'D', ranking: 28 },
-  { name: 'Costa Rica', code: 'CRC', grp: 'D', ranking: 42 },
-  // Group E
-  { name: 'France', code: 'FRA', grp: 'E', ranking: 2 },
-  { name: 'Denmark', code: 'DEN', grp: 'E', ranking: 21 },
-  { name: 'Iran', code: 'IRN', grp: 'E', ranking: 20 },
-  { name: 'Ecuador', code: 'ECU', grp: 'E', ranking: 26 },
-  // Group F
-  { name: 'Brazil', code: 'BRA', grp: 'F', ranking: 5 },
-  { name: 'Switzerland', code: 'SUI', grp: 'F', ranking: 16 },
-  { name: 'Cameroon', code: 'CMR', grp: 'F', ranking: 33 },
-  { name: 'Qatar', code: 'QAT', grp: 'F', ranking: 37 },
-  // Group G
-  { name: 'England', code: 'ENG', grp: 'G', ranking: 4 },
-  { name: 'Senegal', code: 'SEN', grp: 'G', ranking: 19 },
-  { name: 'Poland', code: 'POL', grp: 'G', ranking: 32 },
-  { name: 'Peru', code: 'PER', grp: 'G', ranking: 35 },
-  // Group H
-  { name: 'Spain', code: 'ESP', grp: 'H', ranking: 3 },
-  { name: 'Serbia', code: 'SRB', grp: 'H', ranking: 29 },
-  { name: 'Tunisia', code: 'TUN', grp: 'H', ranking: 34 },
-  { name: 'New Zealand', code: 'NZL', grp: 'H', ranking: 46 },
-  // Group I
-  { name: 'Portugal', code: 'POR', grp: 'I', ranking: 6 },
-  { name: 'Uruguay', code: 'URU', grp: 'I', ranking: 14 },
-  { name: 'Ivory Coast', code: 'CIV', grp: 'I', ranking: 40 },
-  { name: 'Panama', code: 'PAN', grp: 'I', ranking: 44 },
-  // Group J
-  { name: 'Germany', code: 'GER', grp: 'J', ranking: 10 },
-  { name: 'Colombia', code: 'COL', grp: 'J', ranking: 13 },
-  { name: 'Algeria', code: 'ALG', grp: 'J', ranking: 41 },
-  { name: 'Jamaica', code: 'JAM', grp: 'J', ranking: 43 },
-  // Group K
-  { name: 'Italy', code: 'ITA', grp: 'K', ranking: 9 },
-  { name: 'Sweden', code: 'SWE', grp: 'K', ranking: 25 },
-  { name: 'Mali', code: 'MLI', grp: 'K', ranking: 45 },
-  { name: 'Honduras', code: 'HON', grp: 'K', ranking: 47 },
-  // Group L
-  { name: 'Norway', code: 'NOR', grp: 'L', ranking: 27 },
-  { name: 'Chile', code: 'CHI', grp: 'L', ranking: 30 },
-  { name: 'South Africa', code: 'RSA', grp: 'L', ranking: 48 },
-  { name: 'United Arab Emirates', code: 'UAE', grp: 'L', ranking: 49 },
+// Listed in ranking order; group letters are assigned by an even snake spread.
+const QUALIFIED = [
+  { name: 'France', code: 'FRA', ranking: 1 },
+  { name: 'Spain', code: 'ESP', ranking: 2 },
+  { name: 'Argentina', code: 'ARG', ranking: 3 },
+  { name: 'England', code: 'ENG', ranking: 4 },
+  { name: 'Portugal', code: 'POR', ranking: 5 },
+  { name: 'Brazil', code: 'BRA', ranking: 6 },
+  { name: 'Netherlands', code: 'NED', ranking: 7 },
+  { name: 'Morocco', code: 'MAR', ranking: 8 },
+  { name: 'Belgium', code: 'BEL', ranking: 9 },
+  { name: 'Germany', code: 'GER', ranking: 10 },
+  { name: 'Croatia', code: 'CRO', ranking: 11 },
+  { name: 'Colombia', code: 'COL', ranking: 13 },
+  { name: 'Senegal', code: 'SEN', ranking: 14 },
+  { name: 'Mexico', code: 'MEX', ranking: 15 },
+  { name: 'United States', code: 'USA', ranking: 16 },
+  { name: 'Uruguay', code: 'URU', ranking: 17 },
+  { name: 'Japan', code: 'JPN', ranking: 18 },
+  { name: 'Switzerland', code: 'SUI', ranking: 19 },
+  { name: 'Iran', code: 'IRN', ranking: 21 },
+  { name: 'Turkey', code: 'TUR', ranking: 22 },
+  { name: 'Ecuador', code: 'ECU', ranking: 23 },
+  { name: 'Austria', code: 'AUT', ranking: 24 },
+  { name: 'South Korea', code: 'KOR', ranking: 25 },
+  { name: 'Australia', code: 'AUS', ranking: 27 },
+  { name: 'Algeria', code: 'ALG', ranking: 28 },
+  { name: 'Egypt', code: 'EGY', ranking: 29 },
+  { name: 'Canada', code: 'CAN', ranking: 30 },
+  { name: 'Norway', code: 'NOR', ranking: 31 },
+  { name: 'Panama', code: 'PAN', ranking: 33 },
+  { name: 'Ivory Coast', code: 'CIV', ranking: 34 },
+  { name: 'Sweden', code: 'SWE', ranking: 38 },
+  { name: 'Paraguay', code: 'PAR', ranking: 40 },
+  { name: 'Czech Republic', code: 'CZE', ranking: 41 },
+  { name: 'Scotland', code: 'SCO', ranking: 43 },
+  { name: 'Tunisia', code: 'TUN', ranking: 44 },
+  { name: 'DR Congo', code: 'COD', ranking: 46 },
+  { name: 'Uzbekistan', code: 'UZB', ranking: 50 },
+  { name: 'Qatar', code: 'QAT', ranking: 55 },
+  { name: 'Iraq', code: 'IRQ', ranking: 57 },
+  { name: 'South Africa', code: 'RSA', ranking: 60 },
+  { name: 'Saudi Arabia', code: 'KSA', ranking: 61 },
+  { name: 'Jordan', code: 'JOR', ranking: 63 },
+  { name: 'Bosnia and Herzegovina', code: 'BIH', ranking: 65 },
+  { name: 'Cape Verde', code: 'CPV', ranking: 69 },
+  { name: 'Ghana', code: 'GHA', ranking: 74 },
+  { name: 'Curaçao', code: 'CUW', ranking: 82 },
+  { name: 'Haiti', code: 'HAI', ranking: 83 },
+  { name: 'New Zealand', code: 'NZL', ranking: 85 },
 ];
+
+// Placeholder group spread (one team per group, cycling) so each of the 12
+// groups gets 4 teams. Real groups come from the API import.
+export const TEAMS = QUALIFIED.map((t, i) => ({ ...t, grp: String.fromCharCode(65 + (i % 12)) }));
 
 /** The 5 players (still editable in the admin setup). */
 export const DEFAULT_PLAYERS = ['Papacostas', 'Kerr', 'DeWet', 'Barmentloo', 'Terpcou'];
