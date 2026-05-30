@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { requireAdmin } from '../middleware.js';
 import { getAdminData, setScore, updatePlayerNames, setThirdPlace } from '../repo.js';
 import { seed } from '../db/seed.js';
+import { importFromApi, syncFromApi } from '../api/sync.js';
 
 const router = Router();
 router.use(requireAdmin);
@@ -9,9 +10,34 @@ router.use(requireAdmin);
 router.get('/', async (req, res, next) => {
   try {
     const data = await getAdminData();
-    res.render('admin', { title: 'Admin', active: 'admin', ...data });
+    res.render('admin', {
+      title: 'Admin',
+      active: 'admin',
+      ...data,
+      tokenSet: Boolean(process.env.FOOTBALL_DATA_TOKEN),
+      notice: req.query.ok || null,
+      problem: req.query.err || null,
+    });
   } catch (err) {
     next(err);
+  }
+});
+
+router.post('/import', async (req, res, next) => {
+  try {
+    const r = await importFromApi(process.env.FOOTBALL_DATA_TOKEN);
+    res.redirect(`/admin?ok=${encodeURIComponent(`Imported ${r.teams} teams and ${r.fixtures} fixtures.`)}`);
+  } catch (err) {
+    res.redirect(`/admin?err=${encodeURIComponent(err.message)}`);
+  }
+});
+
+router.post('/sync', async (req, res, next) => {
+  try {
+    const r = await syncFromApi(process.env.FOOTBALL_DATA_TOKEN);
+    res.redirect(`/admin?ok=${encodeURIComponent(`Synced ${r.updated} finished match(es).`)}`);
+  } catch (err) {
+    res.redirect(`/admin?err=${encodeURIComponent(err.message)}`);
   }
 });
 

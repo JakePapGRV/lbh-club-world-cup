@@ -39,13 +39,21 @@ export async function seed() {
     teamRows.push(rows[0]);
   }
 
-  // Group fixtures (round-robin).
-  const fixtures = generateGroupFixtures(teamRows);
-  for (const fx of fixtures) {
+  // Group fixtures (round-robin). Ordered by matchday then group, then given a
+  // placeholder kickoff schedule (4 matches/day from 11 Jun 2026) so the
+  // fixtures page can sort by game time. Real kickoffs come from the API import.
+  const fixtures = generateGroupFixtures(teamRows).sort(
+    (a, b) => a.matchday - b.matchday || a.grp.localeCompare(b.grp)
+  );
+  const FIRST_KICKOFF = Date.UTC(2026, 5, 11, 9, 0, 0); // 11 Jun 2026 09:00 UTC
+  const DAY_MS = 86400000;
+  for (let i = 0; i < fixtures.length; i++) {
+    const fx = fixtures[i];
+    const kickoff = new Date(FIRST_KICKOFF + Math.floor(i / 4) * DAY_MS + (i % 4) * 3 * 3600000);
     await query(
-      `INSERT INTO fixtures (stage, grp, matchday, home_team_id, away_team_id)
-       VALUES ($1, $2, $3, $4, $5)`,
-      [fx.stage, fx.grp, fx.matchday, fx.homeTeamId, fx.awayTeamId]
+      `INSERT INTO fixtures (stage, grp, matchday, kickoff, home_team_id, away_team_id)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [fx.stage, fx.grp, fx.matchday, kickoff.toISOString(), fx.homeTeamId, fx.awayTeamId]
     );
   }
 

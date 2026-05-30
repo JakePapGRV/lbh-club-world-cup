@@ -133,6 +133,13 @@ button.danger:hover { background: var(--red); color: #fff; }
 .form input:focus, .form select:focus, input:focus, select:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
 .form .checkbox { flex-direction: row; align-items: center; gap: 0.5rem; color: var(--text); }
 .grid-players { flex-direction: row; flex-wrap: wrap; align-items: flex-end; gap: 0.6rem; }
+.btnrow { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+.btnrow form { margin: 0; }
+button[disabled] { opacity: 0.45; cursor: not-allowed; }
+.banner { border-radius: 10px; padding: 0.7rem 0.9rem; margin-bottom: 1rem; font-weight: 600; }
+.banner.ok { background: rgba(47, 161, 92, 0.18); border: 1px solid var(--green); color: #cfeedd; }
+.banner.err { background: rgba(229, 86, 75, 0.15); border: 1px solid var(--red); color: #f3c9c5; }
+code { background: var(--panel-2); border-radius: 5px; padding: 0.05rem 0.35rem; font-size: 0.85em; }
 
 .rank { color: var(--gold); font-weight: 800; font-size: 0.74rem; }
 .code { display: inline-block; background: var(--panel-2); border-radius: 5px; padding: 0 0.35rem; font-size: 0.72rem; font-weight: 700; color: var(--muted); }
@@ -157,6 +164,9 @@ ul.fixtures { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.5re
   border-radius: 11px; padding: 0.6rem 0.85rem; display: flex; flex-direction: column; gap: 0.3rem;
 }
 .fixture.played { border-left-color: var(--gold); }
+.fixture .fxtop { display: flex; align-items: center; justify-content: space-between; font-size: 0.74rem; color: var(--muted); }
+.fixture .fxtime { font-weight: 700; color: var(--gold-light); font-variant-numeric: tabular-nums; }
+.fixture .fxtag { text-transform: uppercase; letter-spacing: 0.04em; }
 .fixture .teams { display: flex; align-items: center; justify-content: center; gap: 0.7rem; font-weight: 700; }
 .fixture .home { flex: 1; text-align: right; min-width: 0; }
 .fixture .away { flex: 1; text-align: left; min-width: 0; }

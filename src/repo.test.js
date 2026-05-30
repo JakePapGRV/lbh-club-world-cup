@@ -53,8 +53,9 @@ test('full draft + scoring flow through the database', async () => {
   assert.equal(totalPoints, 1);
   assert.equal(ladder.find((p) => p.id === target.home_owner).points, 1);
 
-  // Fixtures view exposes owners once the draft is complete.
+  // Fixtures view is chronological and exposes owners once the draft is complete.
   const groups = await getFixturesView();
-  const firstFixture = groups[0].fixtures[0];
-  assert.ok(firstFixture.home_owner, 'owner overlay should be populated');
+  const allFixtures = groups.flatMap((g) => g.fixtures);
+  assert.ok(allFixtures.some((f) => f.home_owner), 'owner overlay should be populated');
+  assert.ok(allFixtures.some((f) => f.time_label), 'fixtures should have kickoff times');
 });

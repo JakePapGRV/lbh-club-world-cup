@@ -149,13 +149,20 @@ export async function getDraftState() {
 
 // --- fixtures & ladder -----------------------------------------------------
 
-/** Fixtures grouped for display, with team names and owner (player) names. */
+// Times are displayed in this zone. Change DISPLAY_TZ if the group isn't in AEST.
+const DISPLAY_TZ = 'Australia/Sydney';
+const DATE_FMT = new Intl.DateTimeFormat('en-AU', { weekday: 'short', day: 'numeric', month: 'short', timeZone: DISPLAY_TZ });
+const TIME_FMT = new Intl.DateTimeFormat('en-AU', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: DISPLAY_TZ });
+
+const STAGE_LABEL = { group: 'Group', R32: 'Round of 32', R16: 'Round of 16', QF: 'Quarter-final', SF: 'Semi-final', third: '3rd place', final: 'Final' };
+
+/** Fixtures ordered by kickoff time and grouped by calendar day for display. */
 export async function getFixturesView() {
   const players = await getPlayers();
   const nameById = Object.fromEntries(players.map((p) => [p.id, p.name]));
 
   const { rows } = await query(`
-    SELECT f.id, f.stage, f.grp, f.matchday, f.status,
+    SELECT f.id, f.stage, f.grp, f.matchday, f.status, f.kickoff,
            f.home_team_id, f.away_team_id, f.home_score, f.away_score, f.winner_team_id,
            ht.name AS home_name, ht.code AS home_code,
            at.name AS away_name, at.code AS away_code,
@@ -166,19 +173,23 @@ export async function getFixturesView() {
     LEFT JOIN teams at ON at.id = f.away_team_id
     LEFT JOIN picks hp ON hp.team_id = f.home_team_id
     LEFT JOIN picks ap ON ap.team_id = f.away_team_id
-    ORDER BY COALESCE(f.grp, '~'), COALESCE(f.matchday, 0), f.id`);
+    ORDER BY f.kickoff ASC NULLS LAST, f.id`);
 
-  const fixtures = rows.map((r) => ({
-    ...r,
-    home_owner: r.home_owner_id ? nameById[r.home_owner_id] : null,
-    away_owner: r.away_owner_id ? nameById[r.away_owner_id] : null,
-  }));
+  const fixtures = rows.map((r) => {
+    const d = r.kickoff ? new Date(r.kickoff) : null;
+    return {
+      ...r,
+      home_owner: r.home_owner_id ? nameById[r.home_owner_id] : null,
+      away_owner: r.away_owner_id ? nameById[r.away_owner_id] : null,
+      time_label: d ? TIME_FMT.format(d) : '',
+      date_label: d ? DATE_FMT.format(d) : 'Date TBC',
+      stage_label: r.stage === 'group' ? `Group ${r.grp}` : (STAGE_LABEL[r.stage] || r.stage),
+    };
+  });
 
+  // Query is already chronological, so grouping by date keeps day order.
   const groups = {};
-  for (const f of fixtures) {
-    const key = f.stage === 'group' ? `Group ${f.grp}` : f.stage;
-    (groups[key] ||= []).push(f);
-  }
+  for (const f of fixtures) (groups[f.date_label] ||= []).push(f);
   return Object.entries(groups).map(([title, items]) => ({ title, fixtures: items }));
 }
 
