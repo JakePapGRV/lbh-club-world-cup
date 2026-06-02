@@ -202,6 +202,31 @@ const KO_ROUNDS = [
   { stage: 'final', label: 'Final', expected: 1, pts: 5 },
 ];
 
+const KO_STAGES = ['R32', 'R16', 'QF', 'SF', 'third', 'final'];
+
+// Returns a predicate (teamId) => still in the tournament, given the knockout
+// fixture rows. A team is out if it lost a finished knockout match, or — once
+// the knockout bracket exists — it never made the bracket (i.e. it was
+// eliminated when the group stage finished). The bracket is empty until the
+// group stage ends, so during the group stage every team still counts.
+function survivingTeams(koFixtures) {
+  const qualified = new Set();
+  for (const f of koFixtures) {
+    if (f.home_team_id != null) qualified.add(f.home_team_id);
+    if (f.away_team_id != null) qualified.add(f.away_team_id);
+  }
+  const bracketDrawn = qualified.size > 0;
+
+  const eliminated = new Set();
+  for (const f of koFixtures) {
+    if (f.status !== 'finished' || f.winner_team_id == null) continue;
+    const loser = f.winner_team_id === f.home_team_id ? f.away_team_id : f.home_team_id;
+    if (loser != null) eliminated.add(loser);
+  }
+
+  return (teamId) => !eliminated.has(teamId) && (!bracketDrawn || qualified.has(teamId));
+}
+
 /** Knockout fixtures laid out as bracket rounds (padded with TBD slots). */
 export async function getBracket() {
   const players = await getPlayers();
@@ -217,8 +242,8 @@ export async function getBracket() {
     LEFT JOIN teams at ON at.id = f.away_team_id
     LEFT JOIN picks hp ON hp.team_id = f.home_team_id
     LEFT JOIN picks ap ON ap.team_id = f.away_team_id
-    WHERE f.stage IN ('R32', 'R16', 'QF', 'SF', 'third', 'final')
-    ORDER BY f.kickoff ASC NULLS LAST, f.id`);
+    WHERE f.stage = ANY($1)
+    ORDER BY f.kickoff ASC NULLS LAST, f.id`, [KO_STAGES]);
 
   const decorate = (r) => {
     const d = r.kickoff ? new Date(r.kickoff) : null;
@@ -271,8 +296,15 @@ export async function getLadder() {
   const stagePoints = { ...DEFAULT_STAGE_POINTS, third: settings.score_third_place ? 1 : 0 };
   const totals = computeLadder(fixtures, { ownership, nominations, stagePoints });
 
+  const { rows: koRows } = await query(
+    `SELECT home_team_id, away_team_id, winner_team_id, status
+     FROM fixtures WHERE stage IN ('R32', 'R16', 'QF', 'SF', 'third', 'final')`
+  );
+  const alive = survivingTeams(koRows);
   const teamCounts = {};
-  for (const playerId of Object.values(ownership)) teamCounts[playerId] = (teamCounts[playerId] || 0) + 1;
+  for (const [teamId, playerId] of Object.entries(ownership)) {
+    if (alive(Number(teamId))) teamCounts[playerId] = (teamCounts[playerId] || 0) + 1;
+  }
 
   return players
     .map((p) => ({ ...p, points: totals[p.id] ?? 0, teamCount: teamCounts[p.id] ?? 0 }))

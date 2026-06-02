@@ -14,6 +14,35 @@ const STAGE_LABEL = { group: 'Group', R32: 'Round of 32', R16: 'Round of 16', QF
 const byId = (rows) => Object.fromEntries(rows.map((r) => [r.id, r]));
 const ownershipMap = (picks) => Object.fromEntries(picks.map((p) => [p.team_id, p.player_id]));
 
+const KO_STAGES = ['R32', 'R16', 'QF', 'SF', 'third', 'final'];
+
+// Returns a predicate (teamId) => still in the tournament.
+// A team is out if it lost a finished knockout match, or — once the knockout
+// bracket exists — it never made the bracket (i.e. it was eliminated when the
+// group stage finished). The bracket is empty until the group stage ends, so
+// during the group stage every team still counts as alive.
+function survivingTeams(fixtures) {
+  const ko = fixtures.filter((f) => KO_STAGES.includes(f.stage));
+
+  // Teams appearing anywhere in the knockout bracket = the group qualifiers.
+  const qualified = new Set();
+  for (const f of ko) {
+    if (f.home_team_id != null) qualified.add(f.home_team_id);
+    if (f.away_team_id != null) qualified.add(f.away_team_id);
+  }
+  const bracketDrawn = qualified.size > 0;
+
+  // Teams that lost a finished knockout match are knocked out.
+  const eliminated = new Set();
+  for (const f of ko) {
+    if (f.status !== 'finished' || f.winner_team_id == null) continue;
+    const loser = f.winner_team_id === f.home_team_id ? f.away_team_id : f.home_team_id;
+    if (loser != null) eliminated.add(loser);
+  }
+
+  return (teamId) => !eliminated.has(teamId) && (!bracketDrawn || qualified.has(teamId));
+}
+
 function rankSort(a, b) {
   const ra = a.ranking ?? Infinity, rb = b.ranking ?? Infinity;
   return ra - rb || String(a.name).localeCompare(String(b.name));
@@ -118,7 +147,7 @@ const KO_ROUNDS = [
 export function getBracket(data) {
   const teamById = byId(data.teams);
   const owners = ownerNames(data);
-  const ko = data.fixtures.filter((f) => ['R32', 'R16', 'QF', 'SF', 'third', 'final'].includes(f.stage));
+  const ko = data.fixtures.filter((f) => KO_STAGES.includes(f.stage));
   const decorated = [...ko].sort(fxSort).map((f) => decorateFixture(f, teamById, owners));
 
   const byStage = {};
@@ -143,8 +172,11 @@ export function getLadder(data) {
   const stagePoints = { ...DEFAULT_STAGE_POINTS, third: data.settings.score_third_place ? 1 : 0 };
   const totals = computeLadder(finished, { ownership, nominations, stagePoints });
 
+  const alive = survivingTeams(data.fixtures);
   const teamCounts = {};
-  for (const playerId of Object.values(ownership)) teamCounts[playerId] = (teamCounts[playerId] || 0) + 1;
+  for (const pick of data.picks) {
+    if (alive(pick.team_id)) teamCounts[pick.player_id] = (teamCounts[pick.player_id] || 0) + 1;
+  }
 
   return [...data.players]
     .map((p) => ({ ...p, points: totals[p.id] ?? 0, teamCount: teamCounts[p.id] ?? 0 }))

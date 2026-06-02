@@ -9,7 +9,7 @@ export function renderLadder(ladder) {
   return `
   <h1>Ladder</h1>
   <table class="ladder">
-    <thead><tr><th>#</th><th>Player</th><th>Teams</th><th>Points</th></tr></thead>
+    <thead><tr><th>#</th><th>Player</th><th>Teams left</th><th>Points</th></tr></thead>
     <tbody>
       ${ladder.map((p, i) => `
         <tr class="${i === 0 ? 'leader' : ''}">
@@ -20,7 +20,7 @@ export function renderLadder(ladder) {
         </tr>`).join('')}
     </tbody>
   </table>
-  <p class="hint">Points update as results are entered. Group win = 1, draw = 0.5. Knockouts: R32 = 1, R16 = 2, QF = 3, SF = 4, Final = 5.</p>`;
+  <p class="hint">“Teams left” counts only your drafted nations still in the tournament — it drops as teams are knocked out (including those eliminated when the group stage ends). Points update as results are entered. Group win = 1, draw = 0.5. Knockouts: R32 = 1, R16 = 2, QF = 3, SF = 4, Final = 5.</p>`;
 }
 
 // -------------------------------------------------------------- Fixtures
