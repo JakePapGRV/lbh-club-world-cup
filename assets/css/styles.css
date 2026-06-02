@@ -40,6 +40,7 @@ a:hover { text-decoration: underline; }
   align-items: center;
   gap: 0.4rem 1rem;
   padding: 0.55rem 0.9rem calc(0.55rem + env(safe-area-inset-bottom, 0));
+  padding-top: calc(0.55rem + env(safe-area-inset-top, 0)); /* clear the iOS status bar when launched from the home screen */
   padding-left: max(0.9rem, env(safe-area-inset-left));
   padding-right: max(0.9rem, env(safe-area-inset-right));
   background:
