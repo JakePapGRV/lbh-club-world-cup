@@ -55,7 +55,7 @@ function paint(route, body) {
   root.innerHTML = headerHtml(route) + `<main class="container" id="app">${body}</main>`;
 }
 
-async function render() {
+async function render(opts = {}) {
   const route = currentRoute();
   if (!root.querySelector('.topbar')) paint(route, `<p class="hint">Loading…</p>`);
 
@@ -113,6 +113,30 @@ async function render() {
   }
   paint(route, body);
   setAutoRefresh(route);
+  // On navigation (not the silent auto-refresh), jump to where the tournament
+  // is up to so you don't have to scroll past weeks of finished games.
+  if (opts.scrollToCurrent && (route === '/fixtures' || route === '/bracket')) {
+    scrollToCurrentMatch(route);
+  }
+}
+
+// Land on the most recent finished match — recent results sit at the top with
+// the next match just below. Until something's been played there's nothing to
+// scroll past, so leave the page at the top.
+function scrollToCurrentMatch(route) {
+  const app = document.getElementById('app');
+  if (!app) return;
+  const sel = route === '/bracket' ? '.ko-match' : '.fixture';
+  const played = app.querySelectorAll(`${sel}.played`);
+  const target = played[played.length - 1];
+  if (!target) {
+    // Nothing finished yet — show the page from the top.
+    window.scrollTo(0, 0);
+    return;
+  }
+  const headerH = document.querySelector('.topbar')?.offsetHeight || 0;
+  const top = window.scrollY + target.getBoundingClientRect().top - headerH - 10;
+  window.scrollTo(0, Math.max(0, top));
 }
 
 // Ladder + fixtures refresh themselves so entered scores appear without a reload.
@@ -213,5 +237,5 @@ root.addEventListener('click', (e) => {
   }
 });
 
-window.addEventListener('hashchange', render);
-render();
+window.addEventListener('hashchange', () => render({ scrollToCurrent: true }));
+render({ scrollToCurrent: true });
