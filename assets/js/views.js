@@ -95,7 +95,7 @@ export function renderBracket(b) {
 }
 
 // ----------------------------------------------------------------- Draft
-export function renderDraft(s, isAdmin) {
+export function renderDraft(s, isAdmin, myId) {
   const head = `
     <div class="draft-head">
       <h1>Draft Room</h1>
@@ -141,23 +141,42 @@ export function renderDraft(s, isAdmin) {
         </div>`).join('')}
     </section>`;
 
+  const me = s.players.find((p) => p.id === myId) || null;
+  const myTurn = s.settings.draft_status === 'in_progress' && s.current && s.current.playerId === myId;
+
+  // "Who are you?" — each device claims a player so only the on-clock person can pick.
+  const identity = s.settings.draft_status === 'in_progress' ? `
+    <div class="whoami card">
+      ${me
+        ? `<span class="who-label">You are</span> <span class="me">${esc(me.name)}</span> <button class="link" data-action="clear-me">change</button>`
+        : `<span class="who-label">Who are you?</span> <span class="who-btns">${s.players.map((p) => `<button data-action="set-me" data-player-id="${p.id}">${esc(p.name)}</button>`).join('')}</span>`}
+    </div>` : '';
+
+  const teamButtons = `
+    <div class="team-buttons">
+      ${s.available.map((t) => `
+        <button class="teambtn" data-action="draft-pick" data-team-id="${t.id}">
+          <span class="rank">#${t.ranking}</span>
+          <span class="tname">${esc(t.name)}</span>
+          <span class="grp">${esc(t.grp)}</span>
+        </button>`).join('')}
+    </div>`;
+
   let pickpane = '';
-  if (s.settings.draft_status === 'in_progress' && isAdmin && s.current) {
-    pickpane = `
-      <section class="pickpane">
-        <h2>Pick for <span class="hl">${esc(s.current.playerName)}</span></h2>
-        <p class="hint">Best available first — by FIFA ranking</p>
-        <div class="team-buttons">
-          ${s.available.map((t) => `
-            <button class="teambtn" data-action="draft-pick" data-team-id="${t.id}">
-              <span class="rank">#${t.ranking}</span>
-              <span class="tname">${esc(t.name)}</span>
-              <span class="grp">${esc(t.grp)}</span>
-            </button>`).join('')}
-        </div>
-      </section>`;
-  } else if (s.settings.draft_status === 'in_progress' && !isAdmin) {
-    pickpane = `<section class="pickpane"><p class="hint">Log in as admin to make picks.</p></section>`;
+  if (s.settings.draft_status === 'in_progress' && s.current) {
+    if (myTurn) {
+      pickpane = `<section class="pickpane">
+        <h2>Your pick <span class="hl">— ${esc(me.name)}</span></h2>
+        <p class="hint">Best available first — by FIFA ranking</p>${teamButtons}</section>`;
+    } else if (isAdmin) {
+      pickpane = `<section class="pickpane">
+        <h2>Admin — pick for <span class="hl">${esc(s.current.playerName)}</span></h2>
+        <p class="hint">It's ${esc(s.current.playerName)}'s turn. You can pick on their behalf if needed.</p>${teamButtons}</section>`;
+    } else if (!me) {
+      pickpane = `<section class="pickpane"><p class="hint">Choose your name above to take part in the draft.</p></section>`;
+    } else {
+      pickpane = `<section class="pickpane"><p class="waiting">Waiting for <strong>${esc(s.current.playerName)}</strong> to pick…</p></section>`;
+    }
   }
 
   const progress = `
@@ -166,7 +185,7 @@ export function renderDraft(s, isAdmin) {
       <span class="progress-label">${s.picksMade} / ${s.totalPicks} picks</span>
     </div>`;
 
-  return head + progress + onclock + `<div class="draft-grid">${rosters}${pickpane}</div>`;
+  return head + identity + progress + onclock + `<div class="draft-grid">${rosters}${pickpane}</div>`;
 }
 
 // ----------------------------------------------------------------- Admin

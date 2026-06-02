@@ -238,6 +238,12 @@ ul.fixtures { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.5re
 
 .pickpane h2 { margin-bottom: 0.25rem; }
 .hl { color: var(--gold); }
+.whoami { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+.whoami .who-label { color: var(--muted); }
+.whoami .me { color: var(--gold-light); font-weight: 800; font-size: 1.05rem; }
+.whoami .who-btns { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.waiting { color: var(--muted); font-size: 0.95rem; margin: 0; }
+.waiting strong { color: var(--gold-light); }
 .team-buttons { display: grid; grid-template-columns: 1fr; gap: 0.45rem; margin-top: 0.6rem; }
 .team-buttons form { margin: 0; }
 .teambtn { display: flex; align-items: center; gap: 0.55rem; width: 100%; justify-content: flex-start; text-align: left; }

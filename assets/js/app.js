@@ -10,6 +10,8 @@ const PASSWORD = (window.LBH_CONFIG || {}).ADMIN_PASSWORD || 'admin';
 const esc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 let isAdmin = localStorage.getItem('lbh_admin') === '1';
+let myId = Number(localStorage.getItem('lbh_me')) || null; // which player THIS device is
+let draftMyTurn = false;   // set each draft render; pauses auto-refresh while you're picking
 let flash = null;          // {notice} | {problem} consumed by the next admin render
 let loginError = null;
 let refreshTimer = null;
@@ -84,9 +86,12 @@ async function render() {
     case '/bracket':
       body = renderBracket(getBracket(data));
       break;
-    case '/draft':
-      body = renderDraft(getDraftState(data), isAdmin);
+    case '/draft': {
+      const ds = getDraftState(data);
+      draftMyTurn = ds.settings.draft_status === 'in_progress' && !!ds.current && ds.current.playerId === myId;
+      body = renderDraft(ds, isAdmin, myId);
       break;
+    }
     case '/admin':
       if (!isAdmin) { body = renderLogin(loginError); loginError = null; }
       else {
@@ -115,6 +120,9 @@ function setAutoRefresh(route) {
   if (refreshTimer) { clearInterval(refreshTimer); refreshTimer = null; }
   if (route === '/' || route === '/fixtures') {
     refreshTimer = setInterval(() => { if (currentRoute() === route) render(); }, 60000);
+  } else if (route === '/draft') {
+    // Waiting players poll so picks appear live; the person mid-pick isn't yanked.
+    refreshTimer = setInterval(() => { if (currentRoute() === '/draft' && !draftMyTurn) render(); }, 3500);
   }
 }
 
@@ -188,6 +196,14 @@ root.addEventListener('click', (e) => {
     isAdmin = false;
     localStorage.removeItem('lbh_admin');
     location.hash = '#/';
+    render();
+  } else if (action === 'set-me') {
+    myId = Number(el.dataset.playerId);
+    localStorage.setItem('lbh_me', String(myId));
+    render();
+  } else if (action === 'clear-me') {
+    myId = null;
+    localStorage.removeItem('lbh_me');
     render();
   } else if (action === 'draft-pick') {
     run(() => store.makePick(Number(el.dataset.teamId)));
