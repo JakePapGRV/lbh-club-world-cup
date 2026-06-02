@@ -1,0 +1,152 @@
+// Pure view-model builders, ported from src/repo.js but operating on the plain
+// arrays returned by store.loadAll() instead of SQL. Reuses the same tested
+// rules engine (lib/scoring.js, lib/draft.js).
+
+import { buildPickSequence } from './lib/draft.js';
+import { computeLadder, DEFAULT_STAGE_POINTS } from './lib/scoring.js';
+import { TEAMS_PER_PLAYER } from './lib/teams.js';
+
+const DISPLAY_TZ = 'Australia/Sydney';
+const DATE_FMT = new Intl.DateTimeFormat('en-AU', { weekday: 'short', day: 'numeric', month: 'short', timeZone: DISPLAY_TZ });
+const TIME_FMT = new Intl.DateTimeFormat('en-AU', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: DISPLAY_TZ });
+const STAGE_LABEL = { group: 'Group', R32: 'Round of 32', R16: 'Round of 16', QF: 'Quarter-final', SF: 'Semi-final', third: '3rd place', final: 'Final' };
+
+const byId = (rows) => Object.fromEntries(rows.map((r) => [r.id, r]));
+const ownershipMap = (picks) => Object.fromEntries(picks.map((p) => [p.team_id, p.player_id]));
+
+function rankSort(a, b) {
+  const ra = a.ranking ?? Infinity, rb = b.ranking ?? Infinity;
+  return ra - rb || String(a.name).localeCompare(String(b.name));
+}
+
+export function getDraftState(data) {
+  const { settings, picks, teams } = data;
+  const started = settings.draft_status !== 'not_started';
+  const players = started
+    ? data.players.filter((p) => p.draft_slot != null).sort((a, b) => a.draft_slot - b.draft_slot)
+    : [...data.players].sort((a, b) => a.id - b.id);
+
+  const teamById = byId(teams);
+  const playerById = byId(data.players);
+  const takenIds = new Set(picks.map((p) => p.team_id));
+  const available = teams.filter((t) => !takenIds.has(t.id)).sort(rankSort);
+
+  const detailed = [...picks]
+    .sort((a, b) => a.pick_number - b.pick_number)
+    .map((p) => {
+      const t = teamById[p.team_id] || {};
+      return { ...p, team_name: t.name, team_code: t.code, team_grp: t.grp, team_ranking: t.ranking, player_name: (playerById[p.player_id] || {}).name };
+    });
+
+  const rosters = new Map(players.map((p) => [p.id, []]));
+  for (const pick of detailed) {
+    if (!rosters.has(pick.player_id)) rosters.set(pick.player_id, []);
+    rosters.get(pick.player_id).push(pick);
+  }
+
+  let current = null, upcoming = [], totalPicks = 0;
+  if (started) {
+    const seq = buildPickSequence(players.map((p) => p.id), TEAMS_PER_PLAYER);
+    totalPicks = seq.length;
+    const nameById = Object.fromEntries(players.map((p) => [p.id, p.name]));
+    const slot = picks.length;
+    current = seq[slot] ? { ...seq[slot], playerName: nameById[seq[slot].playerId] } : null;
+    upcoming = seq.slice(slot + 1, slot + 6).map((s) => ({ ...s, playerName: nameById[s.playerId] }));
+  }
+
+  return {
+    settings,
+    players: players.map((p) => ({ ...p, roster: rosters.get(p.id) || [] })),
+    available,
+    current,
+    upcoming,
+    picksMade: picks.length,
+    totalPicks,
+    teamsPerPlayer: TEAMS_PER_PLAYER,
+  };
+}
+
+function decorateFixture(f, teamById, ownerNameByTeam) {
+  const d = f.kickoff ? new Date(f.kickoff) : null;
+  const home = teamById[f.home_team_id] || {};
+  const away = teamById[f.away_team_id] || {};
+  return {
+    ...f,
+    home_name: home.name, home_code: home.code,
+    away_name: away.name, away_code: away.code,
+    home_owner: ownerNameByTeam[f.home_team_id] || null,
+    away_owner: ownerNameByTeam[f.away_team_id] || null,
+    home_is_winner: f.winner_team_id != null && f.winner_team_id === f.home_team_id,
+    away_is_winner: f.winner_team_id != null && f.winner_team_id === f.away_team_id,
+    time_label: d ? TIME_FMT.format(d) : '',
+    date_label: d ? DATE_FMT.format(d) : 'Date TBC',
+    stage_label: f.stage === 'group' ? `Group ${f.grp}` : (STAGE_LABEL[f.stage] || f.stage),
+  };
+}
+
+function ownerNames(data) {
+  const playerById = byId(data.players);
+  const own = ownershipMap(data.picks);
+  const out = {};
+  for (const [teamId, playerId] of Object.entries(own)) out[teamId] = (playerById[playerId] || {}).name || null;
+  return out;
+}
+
+const fxSort = (a, b) => {
+  const ka = a.kickoff ? Date.parse(a.kickoff) : Infinity;
+  const kb = b.kickoff ? Date.parse(b.kickoff) : Infinity;
+  return ka - kb || a.id - b.id;
+};
+
+export function getFixturesView(data) {
+  const teamById = byId(data.teams);
+  const owners = ownerNames(data);
+  const fixtures = [...data.fixtures].sort(fxSort).map((f) => decorateFixture(f, teamById, owners));
+  const groups = {};
+  for (const f of fixtures) (groups[f.date_label] ||= []).push(f);
+  return Object.entries(groups).map(([title, items]) => ({ title, fixtures: items }));
+}
+
+const KO_ROUNDS = [
+  { stage: 'R32', label: 'Round of 32', expected: 16, pts: 1 },
+  { stage: 'R16', label: 'Round of 16', expected: 8, pts: 2 },
+  { stage: 'QF', label: 'Quarter-finals', expected: 4, pts: 3 },
+  { stage: 'SF', label: 'Semi-finals', expected: 2, pts: 4 },
+  { stage: 'final', label: 'Final', expected: 1, pts: 5 },
+];
+
+export function getBracket(data) {
+  const teamById = byId(data.teams);
+  const owners = ownerNames(data);
+  const ko = data.fixtures.filter((f) => ['R32', 'R16', 'QF', 'SF', 'third', 'final'].includes(f.stage));
+  const decorated = [...ko].sort(fxSort).map((f) => decorateFixture(f, teamById, owners));
+
+  const byStage = {};
+  for (const f of decorated) (byStage[f.stage] ||= []).push(f);
+
+  const rounds = KO_ROUNDS.map((rd) => {
+    const matches = (byStage[rd.stage] || []).slice();
+    while (matches.length < rd.expected) matches.push({ tbd: true, stage: rd.stage });
+    return { ...rd, matches };
+  });
+
+  return { rounds, thirdPlace: (byStage.third || [])[0] || null, hasAny: ko.length > 0 };
+}
+
+export function getLadder(data) {
+  const ownership = ownershipMap(data.picks);
+  const nominations = Object.fromEntries(data.nominations.map((n) => [n.fixture_id, n.team_id]));
+  const finished = data.fixtures
+    .filter((f) => f.status === 'finished')
+    .map((f) => ({ id: f.id, stage: f.stage, homeTeamId: f.home_team_id, awayTeamId: f.away_team_id, homeScore: f.home_score, awayScore: f.away_score, winnerTeamId: f.winner_team_id }));
+
+  const stagePoints = { ...DEFAULT_STAGE_POINTS, third: data.settings.score_third_place ? 1 : 0 };
+  const totals = computeLadder(finished, { ownership, nominations, stagePoints });
+
+  const teamCounts = {};
+  for (const playerId of Object.values(ownership)) teamCounts[playerId] = (teamCounts[playerId] || 0) + 1;
+
+  return [...data.players]
+    .map((p) => ({ ...p, points: totals[p.id] ?? 0, teamCount: teamCounts[p.id] ?? 0 }))
+    .sort((a, b) => b.points - a.points || a.name.localeCompare(b.name));
+}

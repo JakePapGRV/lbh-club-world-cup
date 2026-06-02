@@ -1,0 +1,201 @@
+// SPA router + event wiring. Hash-based routing so it works under any GitHub
+// Pages base path with no server rewrites.
+
+import { store } from './store.js';
+import { getLadder, getFixturesView, getBracket, getDraftState } from './compute.js';
+import { renderLadder, renderFixtures, renderBracket, renderDraft, renderAdmin, renderLogin } from './views.js';
+
+const root = document.getElementById('root');
+const PASSWORD = (window.LBH_CONFIG || {}).ADMIN_PASSWORD || 'admin';
+const esc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+let isAdmin = localStorage.getItem('lbh_admin') === '1';
+let flash = null;          // {notice} | {problem} consumed by the next admin render
+let loginError = null;
+let refreshTimer = null;
+
+const NAV = [
+  { route: '/', label: 'Ladder', key: 'ladder' },
+  { route: '/fixtures', label: 'Fixtures', key: 'fixtures' },
+  { route: '/bracket', label: 'Bracket', key: 'bracket' },
+  { route: '/draft', label: 'Draft', key: 'draft' },
+];
+
+function currentRoute() {
+  return location.hash.replace(/^#/, '') || '/';
+}
+function activeKey(route) {
+  if (route === '/') return 'ladder';
+  if (route.startsWith('/fixtures')) return 'fixtures';
+  if (route.startsWith('/bracket')) return 'bracket';
+  if (route.startsWith('/draft')) return 'draft';
+  if (route.startsWith('/admin') || route.startsWith('/login')) return 'admin';
+  return '';
+}
+
+function headerHtml(route) {
+  const ak = activeKey(route);
+  const links = NAV.map((n) => `<a href="#${n.route}" class="${ak === n.key ? 'active' : ''}">${n.label}</a>`).join('');
+  const adminArea = isAdmin
+    ? `<a href="#/admin" class="${ak === 'admin' ? 'active' : ''}">Admin</a><button class="link" data-action="logout">Logout</button>`
+    : `<a href="#/login" class="${ak === 'admin' ? 'active' : ''}">Admin</a>`;
+  return `
+  <header class="topbar">
+    <a class="brand" href="#/">
+      <img class="brand-logo" src="assets/img/logo.svg" alt="" width="38" height="45" />
+      <span class="brand-text"><span class="brand-main">LBH Club</span><span class="brand-sub">World Cup Draft</span></span>
+    </a>
+    <nav>${links}${adminArea}</nav>
+  </header>`;
+}
+
+function paint(route, body) {
+  root.innerHTML = headerHtml(route) + `<main class="container" id="app">${body}</main>`;
+}
+
+async function render() {
+  const route = currentRoute();
+  if (!root.querySelector('.topbar')) paint(route, `<p class="hint">Loading…</p>`);
+
+  if (route === '/login') {
+    paint(route, renderLogin(loginError));
+    loginError = null;
+    setAutoRefresh(route);
+    return;
+  }
+
+  let data;
+  try {
+    data = await store.loadAll();
+  } catch (err) {
+    paint(route, `
+      <h1>Couldn't load data</h1>
+      <div class="banner err">${esc(err.message)}</div>
+      <p class="hint">If you've just set up Supabase, check the <code>SUPABASE_URL</code> + <code>SUPABASE_ANON_KEY</code> in
+      <code>config.js</code> and that you ran <code>supabase-schema.sql</code> in the SQL editor.</p>`);
+    return;
+  }
+
+  let body;
+  switch (route) {
+    case '/fixtures':
+      body = renderFixtures(getFixturesView(data));
+      break;
+    case '/bracket':
+      body = renderBracket(getBracket(data));
+      break;
+    case '/draft':
+      body = renderDraft(getDraftState(data), isAdmin);
+      break;
+    case '/admin':
+      if (!isAdmin) { body = renderLogin(loginError); loginError = null; }
+      else {
+        body = renderAdmin({
+          groups: getFixturesView(data),
+          players: [...data.players].sort((a, b) => a.id - b.id),
+          teams: [...data.teams].sort((a, b) => (a.ranking ?? 1e9) - (b.ranking ?? 1e9)),
+          settings: data.settings,
+          mode: store.mode,
+          notice: flash && flash.notice,
+          problem: flash && flash.problem,
+        });
+        flash = null;
+      }
+      break;
+    case '/':
+    default:
+      body = renderLadder(getLadder(data));
+  }
+  paint(route, body);
+  setAutoRefresh(route);
+}
+
+// Ladder + fixtures refresh themselves so entered scores appear without a reload.
+function setAutoRefresh(route) {
+  if (refreshTimer) { clearInterval(refreshTimer); refreshTimer = null; }
+  if (route === '/' || route === '/fixtures') {
+    refreshTimer = setInterval(() => { if (currentRoute() === route) render(); }, 60000);
+  }
+}
+
+async function run(fn) {
+  try {
+    await fn();
+    await render();
+  } catch (err) {
+    flash = { problem: err.message };
+    if (currentRoute() === '/admin') await render();
+    else { window.alert(err.message); await render(); }
+  }
+}
+
+// ---- event delegation (listeners live on the persistent #root) ----
+root.addEventListener('submit', (e) => {
+  const form = e.target.closest('form[data-action]');
+  if (!form) return;
+  e.preventDefault();
+  const action = form.dataset.action;
+  const fd = new FormData(form);
+
+  if (action === 'login') {
+    if (String(fd.get('password')) === PASSWORD) {
+      isAdmin = true;
+      localStorage.setItem('lbh_admin', '1');
+      loginError = null;
+      location.hash = '#/admin';
+      if (currentRoute() === '/admin') render();
+    } else {
+      loginError = 'Incorrect password.';
+      render();
+    }
+    return;
+  }
+  if (action === 'draft-start') {
+    if (!window.confirm('Start the draft and lock in a random order?')) return;
+    run(() => store.startDraft());
+  } else if (action === 'draft-reset') {
+    if (!window.confirm('Reset the entire draft? All picks will be cleared and the order re-rolled.')) return;
+    run(() => store.resetDraft());
+  } else if (action === 'score') {
+    const id = Number(fd.get('fixtureId'));
+    const home = fd.get('homeScore') === '' ? null : Number(fd.get('homeScore'));
+    const away = fd.get('awayScore') === '' ? null : Number(fd.get('awayScore'));
+    const w = fd.get('winnerTeamId');
+    run(async () => { await store.setScore(id, home, away, w ? Number(w) : null); flash = { notice: 'Score saved.' }; });
+  } else if (action === 'players') {
+    const map = {};
+    for (const [k, v] of fd.entries()) if (k.startsWith('player_')) map[k.slice(7)] = v;
+    run(async () => { await store.updatePlayerNames(map); flash = { notice: 'Player names saved.' }; });
+  } else if (action === 'settings') {
+    const on = fd.get('scoreThirdPlace') != null;
+    run(async () => { await store.setThirdPlace(on); flash = { notice: 'Settings saved.' }; });
+  } else if (action === 'add-fixture') {
+    const stage = fd.get('stage');
+    const homeTeamId = Number(fd.get('homeTeamId'));
+    const awayTeamId = Number(fd.get('awayTeamId'));
+    const raw = fd.get('kickoff');
+    const kickoff = raw ? new Date(raw).toISOString() : null;
+    if (homeTeamId === awayTeamId) { window.alert('Pick two different teams.'); return; }
+    run(async () => { await store.addFixture({ stage, kickoff, homeTeamId, awayTeamId }); flash = { notice: 'Knockout match added.' }; });
+  }
+});
+
+root.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-action]');
+  if (!el || el.tagName === 'FORM') return;
+  const action = el.dataset.action;
+  if (action === 'logout') {
+    isAdmin = false;
+    localStorage.removeItem('lbh_admin');
+    location.hash = '#/';
+    render();
+  } else if (action === 'draft-pick') {
+    run(() => store.makePick(Number(el.dataset.teamId)));
+  } else if (action === 'del-fixture') {
+    if (!window.confirm('Delete this knockout match?')) return;
+    run(() => store.deleteFixture(Number(el.dataset.id)));
+  }
+});
+
+window.addEventListener('hashchange', render);
+render();

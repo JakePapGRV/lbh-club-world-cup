@@ -3,11 +3,15 @@
 A 5-player fantasy draft for the 2026 FIFA World Cup. Draft your teams in a
 snake order, then earn points as your nations win through the tournament.
 
-- **Draft room** — random order, then snake (1-2-3-4-5, 5-4-3-2-1, …), 9 teams each.
+This is a **static web app** (plain HTML/CSS/JS) hosted free on **GitHub Pages**,
+with **Supabase** (free hosted Postgres) holding the shared draft + scores so all
+five of you see the same live ladder from your own phones.
+
 - **Ladder** — live points table.
-- **Fixtures** — every match with the owner overlay (e.g. *Australia vs USA = Jake vs Mickey*).
-- **Bracket** — the knockout tree (R32 → Final + 3rd place), advancing team highlighted, owner overlay per nation.
-- **Admin** — start/reset the draft, edit player names, enter scores, settings.
+- **Fixtures** — every match with the owner overlay (e.g. *France vs Iraq = DeWet vs —*), kickoff times in AEST.
+- **Bracket** — the knockout tree (R32 → Final + 3rd place), advancing team highlighted.
+- **Draft room** — random order, then snake (1-2-3-4-5, 5-4-3-2-1, …), 9 teams each.
+- **Admin** — start/reset the draft, edit player names, enter scores, add knockout matches, settings.
 
 ## Scoring
 
@@ -26,83 +30,89 @@ points. If you own **both** teams in a match, nominate a winner in advance —
 correct nomination scores the win, a draw scores 0.5, a wrong/no nomination
 scores 0.
 
-## Run it locally (zero setup)
+## Hosting — it's already on GitHub Pages
+
+GitHub Pages serves this repo's **root**, so the site is live at:
+
+> **https://jakepapgrv.github.io/lbh-club-world-cup/**
+
+(If Pages ever needs re-enabling: repo **Settings → Pages → Build and deployment
+→ Deploy from a branch → `main` / `/ (root)`**.)
+
+Every push to `main` redeploys automatically.
+
+## One-time setup: connect Supabase (so the 5 of you share data)
+
+Without this, the app still runs — but data lives only in **each person's own
+browser**, so you wouldn't share a ladder. Do this once before the real draft:
+
+1. Create a free project at **https://supabase.com**.
+2. In Supabase, open **SQL Editor → New query**, paste the entire contents of
+   [`supabase-schema.sql`](supabase-schema.sql), and **Run**. This creates the
+   tables and seeds the 5 players, 48 teams, and all 72 group fixtures.
+3. In Supabase, go to **Project Settings → API** and copy two values:
+   - **Project URL**
+   - the **`anon` public** API key (safe to commit — it's designed for the browser)
+4. Edit [`config.js`](config.js) and paste them in, plus pick an admin password:
+   ```js
+   window.LBH_CONFIG = {
+     SUPABASE_URL: 'https://YOURPROJECT.supabase.co',
+     SUPABASE_ANON_KEY: 'eyJ...the long anon key...',
+     ADMIN_PASSWORD: 'pick-something',
+   };
+   ```
+5. Commit + push `config.js`. Within a minute the live site is shared across everyone.
+
+The Admin page shows **`supabase · shared`** when it's connected, or
+**`local · this device only`** when `config.js` is still blank.
+
+## Running the draft
+
+1. Open the site, click **Admin**, log in with your `ADMIN_PASSWORD`.
+2. **Draft Room → Start draft** randomises the order and begins the snake. Run a
+   practice draft if you like, then **Reset draft** and do the real one. Teams
+   lock in automatically once all 45 picks are made (3 nations stay undrafted).
+3. During the tournament, enter results on **Admin → Enter scores**. For knockout
+   ties, add each match on **Admin → Add a knockout match** as the bracket is
+   drawn, then score it (pick the team that advances — that's who gets the points,
+   including penalty wins). The Ladder and Fixtures pages refresh themselves every
+   minute.
+
+## Run it locally
+
+It's static, so any local web server works. With Node installed:
 
 ```bash
-npm install
-npm run dev
+npx http-server . -p 5173 -c-1
 ```
 
-Open http://localhost:3000. With no `DATABASE_URL`, it uses an in-memory
-Postgres (PGlite) seeded with placeholder teams — perfect for a test run. **Data
-is not saved between restarts in this mode.**
+Then open http://localhost:5173. With `config.js` blank it uses in-browser
+storage (great for a solo test); fill in Supabase to share.
 
-The admin area (start/reset draft, scores) is behind a password — default `admin`
-locally. Set `ADMIN_PASSWORD` to change it.
+## Live scores (optional, later)
 
-Run the tests (rules engine + full draft flow):
+Scores are entered manually, which is the reliable path for the draft and group
+stage. If you later want automatic scores from the SportMonks API, the original
+sync logic lives in `src/api/` — it can be run on a schedule (e.g. a GitHub
+Action with the API token kept as a repo secret) that writes results into
+Supabase. Manual entry always remains as the fallback.
+
+## Project layout
+
+- `index.html`, `config.js`, `assets/` — the live static app.
+  - `assets/js/lib/` — the pure rules engine (`draft.js`, `scoring.js`,
+    `fixtures.js`) and team data (`teams.js`), reused unchanged from the original.
+  - `assets/js/store.js` — data layer (Supabase, with a localStorage fallback).
+  - `assets/js/compute.js`, `views.js`, `app.js` — view-models, rendering, router.
+- `supabase-schema.sql` — generated by `scripts/gen-supabase-sql.mjs`.
+- `src/`, `views/`, `package.json` — the **legacy** Node/Express + Postgres
+  version (previously deployed on Render). Kept for reference and as the source of
+  the rules engine + the SQL generator; not used by the GitHub Pages site.
+
+## Regenerating the SQL seed
+
+If you change `src/data/teams.js`, regenerate the seed:
 
 ```bash
-npm test
+node scripts/gen-supabase-sql.mjs
 ```
-
-## Deploy to Render (persistent)
-
-1. Push this repo to GitHub.
-2. On [render.com](https://render.com): **New + → Blueprint**, point it at the repo.
-   `render.yaml` provisions the web service **and** a managed Postgres database.
-3. In the service's **Environment** tab set:
-   - `ADMIN_PASSWORD` — your admin password.
-   - `FOOTBALL_DATA_TOKEN` — a free token from
-     [football-data.org](https://www.football-data.org/client/register) (only
-     needed once live-score auto-sync is enabled).
-4. With `DATABASE_URL` present (Render sets it automatically), data persists
-   across restarts and redeploys.
-
-## Test run, then the real thing
-
-1. Deploy (or run locally), log in as admin, open **Draft Room**, hit **Start
-   draft** and run through it.
-2. When you're happy, **Admin → Reset draft** (or **Draft Room → Reset draft**)
-   clears all picks and re-rolls the order.
-3. Do the real draft once. Teams lock in when all 45 picks are made.
-
-## Environment variables
-
-See `.env.example`. Key ones: `DATABASE_URL`, `ADMIN_PASSWORD`, `SESSION_SECRET`,
-`FOOTBALL_DATA_TOKEN`.
-
-## Live scores
-
-The default provider is **SportMonks** (`SCORE_PROVIDER=sportmonks`); set
-`SCORE_PROVIDER=football-data` to use football-data.org instead.
-
-1. Get a SportMonks token (a plan that covers the FIFA World Cup) and set
-   `SPORTMONKS_TOKEN` (locally in `.env`, on Render in the dashboard).
-   *(For football-data.org use `FOOTBALL_DATA_TOKEN` instead.)*
-2. **Before drafting**, go to **Admin → Live scores → Import 2026 data** to pull
-   the official teams + fixtures (replaces the placeholder data; matched to the
-   World Cup league `26618`, FIFA rankings enriched from `src/data/fifaRankings.js`).
-3. During the tournament, scores **auto-sync** every few minutes (`SCORE_SYNC_CRON`)
-   from `/fixtures/between` (covers finished, in-play and upcoming). You can also
-   hit **Sync scores now**, and manual entry remains as a fallback.
-
-SportMonks tuning (optional env): `SPORTMONKS_WC_LEAGUE_ID` (default 26618),
-`SPORTMONKS_WC_FROM` / `SPORTMONKS_WC_TO` (tournament window).
-
-Fixture times are shown in AEST — change `DISPLAY_TZ` in `src/repo.js` for a
-different zone.
-
-> **Calibration note:** the SportMonks mapping is built to the documented v3
-> shape and unit-tested with mock payloads, but hasn't been run against the live
-> feed. The likely spot needing a tweak is the knockout **stage names**
-> (`mapStageName` in `src/api/sportmonks.js`) — after the first real import,
-> check the bracket on the Fixtures page.
-
-## Status / roadmap
-
-- ✅ Rules engine (draft order + scoring), fully tested
-- ✅ Draft room, ladder, fixtures (sorted by kickoff time), admin score entry
-- ✅ Live score auto-sync + official 2026 teams/fixtures import from the API
-- ✅ Knockout bracket page (R32 → Final + 3rd place, owner overlay)
-- ⬜ Verify against the live API once a token + real fixtures are available
