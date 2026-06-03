@@ -179,11 +179,14 @@ ul.fixtures { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.5re
 .owners .vs { color: var(--muted); }
 
 /* ---------- bracket ---------- */
-.bracket { display: flex; flex-direction: column; gap: 1.5rem; }
+/* Horizontal scrolling tree on every screen — swipe sideways through the rounds
+   (R32 → Final), the same as on desktop. */
+.bracket { display: flex; flex-direction: row; align-items: stretch; gap: 1rem; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 0.5rem; }
+.round { min-width: 210px; flex: 1; display: flex; flex-direction: column; }
 .round-label { font-size: 0.95rem; margin: 0 0 0.6rem; display: flex; align-items: center; gap: 0.5rem; color: var(--text); }
 .round-label::before { content: ""; width: 4px; height: 1em; background: var(--gold); border-radius: 2px; }
 .round-pts { margin-left: auto; font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--gold-light); background: var(--panel-2); border-radius: 999px; padding: 0.1rem 0.5rem; }
-.round-matches { display: flex; flex-direction: column; gap: 0.5rem; }
+.round-matches { display: flex; flex-direction: column; gap: 0.5rem; flex: 1; justify-content: space-around; }
 
 .ko-match { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
 .ko-match.played { border-color: var(--gold); }
@@ -201,12 +204,6 @@ ul.fixtures { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.5re
 .ko-side.tbd .ko-team { color: var(--muted); font-weight: 600; }
 
 .third-place { margin-top: 1.5rem; max-width: 360px; }
-
-@media (min-width: 900px) {
-  .bracket { flex-direction: row; align-items: stretch; gap: 1rem; overflow-x: auto; padding-bottom: 0.5rem; }
-  .round { min-width: 210px; flex: 1; display: flex; flex-direction: column; }
-  .round-matches { flex: 1; justify-content: space-around; }
-}
 
 /* ---------- draft ---------- */
 .draft-head { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
