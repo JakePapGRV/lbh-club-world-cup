@@ -405,8 +405,16 @@ hr { border:none; border-top:1px solid var(--border); margin:1rem 0; width:100%;
 .fxgroup { margin-bottom: 2rem; }
 ul.fixtures { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
 
+/*
+ * 3-column grid: fixed date | flex teams | fixed owners
+ * Grid ensures every column starts at the same x position across ALL rows,
+ * so "v" is always centred and team names always left-align together.
+ */
 .fixture {
-  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  display: grid;
+  grid-template-columns: 5rem 1fr 6.5rem;
+  align-items: center;
+  column-gap: 8px;
   border-radius: 999px; padding: 10px 22px; min-height: 37px;
   background: linear-gradient(90deg, #f2fe6a 0%, #8b42ff 100%);
   font-family: var(--font); color: #202123;
@@ -415,40 +423,41 @@ ul.fixtures { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; 
 .fixture:hover { filter: brightness(1.06); }
 .fixture.played { background: linear-gradient(90deg, #d4e055 0%, #6b31d4 100%); }
 
-/* Left: date + time */
+/* Col 1 — date + time */
 .fixture .fx-when {
   font-size: .75rem; font-weight: 700; text-transform: uppercase;
   letter-spacing: .05em; color: rgba(0,0,0,.65);
-  white-space: nowrap; flex-shrink: 0; min-width: 5rem;
+  white-space: nowrap; overflow: hidden;
 }
 
-/* Centre: team names */
+/* Col 2 — team names, always centred */
 .fixture .fx-teams {
-  flex: 1; display: flex; align-items: center; justify-content: center; gap: .35rem;
-  min-width: 0; padding: 0 4px;
+  display: flex; align-items: center; justify-content: center; gap: .3rem;
+  min-width: 0;
 }
 .fixture .fx-home {
   flex: 1; text-align: right; font-weight: 800; font-size: .88rem;
   text-transform: uppercase; letter-spacing: .02em;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
 }
 .fixture .fx-away {
   flex: 1; text-align: left; font-weight: 800; font-size: .88rem;
   text-transform: uppercase; letter-spacing: .02em;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
 }
 .fixture .fx-sep {
   font-size: .82rem; font-weight: 900; color: rgba(0,0,0,.7);
-  min-width: 2rem; text-align: center; flex-shrink: 0;
+  width: 1.6rem; text-align: center; flex-shrink: 0;
   font-variant-numeric: tabular-nums;
 }
 .fixture.played .fx-sep { color: rgba(0,0,0,.8); }
 
-/* Right: owner names */
+/* Col 3 — owner names, truncate overflow */
 .fixture .fx-owners {
-  font-size: .72rem; font-weight: 700; text-transform: uppercase;
-  letter-spacing: .04em; color: rgba(0,0,0,.6);
-  white-space: nowrap; flex-shrink: 0; text-align: right; min-width: 3rem;
+  font-size: .7rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .03em; color: rgba(0,0,0,.6);
+  white-space: nowrap; text-align: right;
+  overflow: hidden; text-overflow: ellipsis;
 }
 
 /* ---- BRACKET ---- */
@@ -565,24 +574,17 @@ ul.fixtures { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; 
   .ladder-name  { font-size: .9rem; }
   .ladder-avatar { width: 1.8rem; height: 1.8rem; font-size: .82rem; }
 
-  /* Fixture pills: compress on small screens */
+  /* Fixture pills: compress on small screens — shrink fixed grid columns */
   .fixture {
+    grid-template-columns: 4rem 1fr 5rem;
     padding: 8px 14px;
-    gap: 5px;
+    column-gap: 5px;
   }
-  .fixture .fx-when {
-    min-width: 0;
-    font-size: .65rem;
-    letter-spacing: .03em;
-  }
-  .fixture .fx-owners {
-    min-width: 0;
-    font-size: .62rem;
-    letter-spacing: .02em;
-  }
+  .fixture .fx-when { font-size: .65rem; letter-spacing: .03em; }
+  .fixture .fx-owners { font-size: .62rem; letter-spacing: .02em; }
   .fixture .fx-home,
   .fixture .fx-away { font-size: .8rem; }
-  .fixture .fx-sep  { min-width: 1.6rem; font-size: .75rem; }
+  .fixture .fx-sep  { width: 1.4rem; font-size: .75rem; }
 
   /* View button: full width on small screens */
   .view-btn-wrap { margin-top: 2rem; }
@@ -612,15 +614,16 @@ ul.fixtures { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; 
   .ladder-header {
     grid-template-columns: 1.8rem 2rem 1fr 3.8rem 3.4rem;
   }
-  .fixture .fx-when { display: none; }
-  .fixture .fx-owners { min-width: 0; font-size: .6rem; }
+  .fixture { grid-template-columns: 3rem 1fr 4.5rem; }
+  .fixture .fx-when { font-size: .58rem; }
+  .fixture .fx-owners { font-size: .58rem; }
 }
 
 /* Tablet and up: restore full comfort */
 @media(min-width: 600px) {
   h1 { font-size: 3.5rem; }
   .draft-grid { grid-template-columns: 300px 1fr; }
-  .fixture .fx-when { min-width: 5rem; }
+  .fixture { grid-template-columns: 5rem 1fr 7rem; }
 }
 
 @media(min-width: 1000px) {
