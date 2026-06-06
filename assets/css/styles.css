@@ -102,6 +102,62 @@ a:hover { text-decoration: underline; }
 .theme-toggle:hover { border-color: rgba(255,255,255,.5); color: #fff; background: rgba(255,255,255,.08); }
 .theme-toggle:active { transform: scale(.95); }
 
+/* ---- SPLASH / LOADING SCREEN ---- */
+#splash {
+  position: fixed; inset: 0; z-index: 9999;
+  background: #111111;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+}
+#splash.splash-out {
+  opacity: 0; pointer-events: none;
+  transition: opacity .5s ease;
+}
+.splash-brand {
+  position: absolute; top: 4.5rem;
+  display: flex; align-items: center; gap: .8rem;
+}
+.splash-logo { width: 54px; height: auto; }
+.splash-title {
+  font-family: var(--font); font-weight: 800;
+  font-size: 1.2rem; line-height: 1.2;
+  letter-spacing: .07em; color: #8bffec;
+  text-transform: uppercase;
+}
+/* Spinning gradient ring around the photo */
+.splash-spinner {
+  width: 96px; height: 96px; border-radius: 50%;
+  padding: 3px;
+  background: conic-gradient(from 0deg, #8b42ff, #4dffc3, #8b42ff);
+  animation: splash-spin 1.2s linear infinite;
+}
+.splash-spinner-inner {
+  width: 100%; height: 100%;
+  border-radius: 50%; overflow: hidden;
+  background: #111;
+  animation: splash-counter 1.2s linear infinite;
+}
+.splash-spinner-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+@keyframes splash-spin    { to { transform: rotate(360deg);  } }
+@keyframes splash-counter { to { transform: rotate(-360deg); } }
+/* Loading bar fills left to right */
+.splash-bar-track {
+  position: absolute; bottom: 3rem;
+  left: 1.5rem; right: 1.5rem;
+  height: 37px; border-radius: 999px;
+  background: rgba(255,255,255,.06); overflow: hidden;
+}
+.splash-bar {
+  height: 100%; border-radius: 999px;
+  background: linear-gradient(90deg, #8b42ff 0%, #4dffc3 100%);
+  transform: scaleX(0); transform-origin: left center;
+  animation: splash-load 2.4s cubic-bezier(.4,0,.2,1) forwards;
+}
+@keyframes splash-load {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
 /* ---- TOPBAR ---- */
 .topbar {
   display: flex;

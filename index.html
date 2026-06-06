@@ -18,11 +18,11 @@
   <meta name="apple-mobile-web-app-title" content="LBH Draft" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="assets/css/styles.css?v=6" />
+  <link rel="stylesheet" href="assets/css/styles.css?v=8" />
   <!-- Cache-bust: redirect to a versioned URL so stale cached pages reload once -->
   <script>
     (function () {
-      var V = '7';
+      var V = '8';
       try {
         if (localStorage.getItem('_lbhv') !== V) {
           localStorage.setItem('_lbhv', V);
@@ -36,7 +36,21 @@
   <script src="config.js"></script>
 </head>
 <body data-route="ladder" data-theme="dark">
+  <div id="splash">
+    <div class="splash-brand">
+      <img src="assets/img/logo.svg" class="splash-logo" alt="" />
+      <div class="splash-title">LBH DRAFT<br>2026</div>
+    </div>
+    <div class="splash-spinner">
+      <div class="splash-spinner-inner">
+        <img src="assets/img/mk.png" class="splash-spinner-img" alt="" />
+      </div>
+    </div>
+    <div class="splash-bar-track">
+      <div class="splash-bar"></div>
+    </div>
+  </div>
   <div id="root"><main class="container"><p class="hint">Loading…</p></main></div>
-  <script type="module" src="assets/js/app.js?v=6"></script>
+  <script type="module" src="assets/js/app.js?v=8"></script>
 </body>
 </html>
