@@ -66,10 +66,24 @@ const TABLE = [
 
 export const FIFA_RANKINGS = Object.fromEntries(TABLE.map(([, code, rank]) => [code, rank]));
 const BY_NAME = Object.fromEntries(TABLE.map(([name, , rank]) => [name.toLowerCase(), rank]));
+const NAME_TO_CODE = Object.fromEntries(TABLE.map(([name, code]) => [name.toLowerCase(), code]));
 
 /** Best-effort ranking lookup by code then name; null if unknown (sorts last). */
 export function rankFor(name, code) {
   if (code && FIFA_RANKINGS[code.toUpperCase()] != null) return FIFA_RANKINGS[code.toUpperCase()];
   if (name && BY_NAME[name.toLowerCase()] != null) return BY_NAME[name.toLowerCase()];
+  return null;
+}
+
+/**
+ * Resolve an API team's name/code to our canonical FIFA 3-letter code; null if
+ * unknown. Prefers the name table (it carries the alternate spellings the APIs
+ * use — "Korea Republic", "Türkiye", "Côte d'Ivoire" …), then falls back to a
+ * code the API supplied if it's one we recognise. Used to link a provider's
+ * team ids onto our seeded teams.
+ */
+export function codeFor(name, code) {
+  if (name && NAME_TO_CODE[name.toLowerCase()]) return NAME_TO_CODE[name.toLowerCase()];
+  if (code && FIFA_RANKINGS[code.toUpperCase()] != null) return code.toUpperCase();
   return null;
 }

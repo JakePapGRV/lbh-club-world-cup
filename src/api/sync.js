@@ -1,7 +1,7 @@
 import { query, withTransaction } from '../db/index.js';
 import * as footballData from './footballData.js';
 import * as sportmonks from './sportmonks.js';
-import { rankFor } from '../data/fifaRankings.js';
+import { rankFor, codeFor } from '../data/fifaRankings.js';
 
 // Which score provider is active, and its token. Defaults to SportMonks.
 function activeProvider() {
@@ -159,6 +159,75 @@ export async function syncScores(matches) {
   return { updated, inserted };
 }
 
+/**
+ * Link the provider's ids onto our pre-seeded rows, so syncScores can match by
+ * api_id. The static Supabase app ships seeded with 48 teams + 72 group fixtures
+ * but NO api_ids; without this, syncScores wouldn't recognise them and would
+ * insert duplicates instead of updating. We therefore, for any row missing one:
+ *   - teams: match the API team to a seeded team by canonical FIFA code (resolved
+ *     from the API's name/code via the alias table), then stamp teams.api_id,
+ *   - group fixtures: match by the unordered pair of seeded team ids (each group
+ *     pairing is played exactly once), then stamp fixtures.api_id.
+ * It only ever fills a blank api_id, so it's a no-op once everything is linked
+ * and safe to run on every sync. Knockout fixtures aren't seeded, so they're left
+ * for syncScores to insert (keyed by api_id) as the bracket is drawn.
+ * Returns { teamsLinked, fixturesLinked, unmatched } — unmatched lists API team
+ * names we couldn't map (add a spelling to fifaRankings.js if any show up).
+ */
+export async function ensureApiIds(matches) {
+  const teamRows = (await query('SELECT id, name, code, api_id FROM teams')).rows;
+  const seedByCode = new Map();
+  for (const t of teamRows) if (t.code) seedByCode.set(t.code.toUpperCase(), t);
+
+  // Unique API participants across all matches.
+  const apiTeams = new Map(); // apiId -> { name, code }
+  for (const m of matches) {
+    for (const side of [m.home, m.away]) {
+      if (side && side.apiId) apiTeams.set(String(side.apiId), side);
+    }
+  }
+
+  let teamsLinked = 0;
+  const unmatched = [];
+  const seedIdByApi = new Map(); // apiId -> seeded team id (for the fixture pass)
+  for (const [apiId, side] of apiTeams) {
+    const code = codeFor(side.name, side.code);
+    const seed = code ? seedByCode.get(code) : null;
+    if (!seed) {
+      unmatched.push(side.name || side.code || apiId);
+      continue;
+    }
+    seedIdByApi.set(apiId, seed.id);
+    if (!seed.api_id) {
+      await query('UPDATE teams SET api_id = $1 WHERE id = $2', [apiId, seed.id]);
+      seed.api_id = apiId;
+      teamsLinked += 1;
+    }
+  }
+
+  // Group fixtures: key seeded rows by their unordered team pair.
+  const fxRows = (await query("SELECT id, home_team_id, away_team_id, api_id FROM fixtures WHERE stage = 'group'")).rows;
+  const pairKey = (a, b) => [a, b].sort((x, y) => x - y).join(':');
+  const fxByPair = new Map();
+  for (const f of fxRows) fxByPair.set(pairKey(f.home_team_id, f.away_team_id), f);
+
+  let fixturesLinked = 0;
+  for (const m of matches) {
+    if (m.stage !== 'group') continue;
+    const homeId = seedIdByApi.get(String(m.home?.apiId));
+    const awayId = seedIdByApi.get(String(m.away?.apiId));
+    if (!homeId || !awayId) continue;
+    const fx = fxByPair.get(pairKey(homeId, awayId));
+    if (fx && !fx.api_id) {
+      await query('UPDATE fixtures SET api_id = $1 WHERE id = $2', [m.apiId, fx.id]);
+      fx.api_id = m.apiId;
+      fixturesLinked += 1;
+    }
+  }
+
+  return { teamsLinked, fixturesLinked, unmatched };
+}
+
 // Fetch-and-do helpers used by the cron job and the admin buttons. They pick the
 // active provider (SportMonks by default) and read its token from the env.
 export async function importFromApi() {
@@ -169,5 +238,8 @@ export async function importFromApi() {
 export async function syncFromApi() {
   const p = activeProvider();
   if (!p.token) throw new Error(`No API token set for provider "${p.name}".`);
-  return syncScores(await p.fetch(p.token));
+  const matches = await p.fetch(p.token);
+  const mapped = await ensureApiIds(matches); // link provider ids onto seeded rows first
+  const { updated, inserted } = await syncScores(matches);
+  return { provider: p.name, fetched: matches.length, ...mapped, updated, inserted };
 }

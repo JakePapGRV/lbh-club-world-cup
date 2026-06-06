@@ -12,6 +12,7 @@
     "db:setup": "node src/db/setup.js",
     "db:seed": "node src/db/seed.js",
     "db:reset": "node src/db/reset.js",
+    "sync": "node scripts/sync-scores.mjs",
     "test": "node --test"
   },
   "dependencies": {
