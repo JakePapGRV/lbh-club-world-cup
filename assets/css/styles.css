@@ -55,9 +55,6 @@ body[data-theme="dark"] {
   --text-2:   rgba(255,255,255,0.58);
   --text-3:   rgba(255,255,255,0.36);
 }
-body[data-theme="dark"] .fxgroup h2 {
-  background: rgba(15,15,15,.93);
-}
 body[data-theme="dark"] input,
 body[data-theme="dark"] select {
   background: rgba(255,255,255,.06);
@@ -280,7 +277,7 @@ hr { border:none; border-top:1px solid var(--border); margin:1rem 0; width:100%;
 
 /* ---- NUMBER FONT — Inter on all numeric/score elements ---- */
 .ladder-rank, .ladder-pts, .ladder-teams,
-.fixture .fx-sep, .fixture .fx-time, .fixture .fx-date,
+.fixture .fx-sep, .fixture .fx-when, .fixture .fx-owners,
 .ko-score, .ko-when,
 .pts, .progress-label, .fxtime, .round-pts,
 .score-row .sc, .score-row input {
@@ -353,32 +350,29 @@ hr { border:none; border-top:1px solid var(--border); margin:1rem 0; width:100%;
 
 /* ---- FIXTURES — gradient pill rows ---- */
 .fxgroup { margin-bottom: 2rem; }
-.fxgroup h2 {
-  position: sticky; top: 55px; z-index: 10;
-  background: rgba(255,255,255,.92);
-  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-  padding: .45rem 0; margin: 0 0 .6rem;
-}
-ul.fixtures { list-style: none; padding: 0; margin: 0; display: grid; gap: .45rem; }
+ul.fixtures { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
 
 .fixture {
-  display: flex; align-items: center; gap: .55rem;
-  border-radius: 999px; padding: .6rem .95rem .6rem 1.1rem;
-  background: linear-gradient(90deg, #f0fb6c 0%, #8b44fb 100%);
-  font-family: var(--font); color: #1e1e1e;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  border-radius: 999px; padding: 10px 22px; min-height: 37px;
+  background: linear-gradient(90deg, #f2fe6a 0%, #8b42ff 100%);
+  font-family: var(--font); color: #202123;
   transition: filter .12s;
 }
 .fixture:hover { filter: brightness(1.06); }
 .fixture.played { background: linear-gradient(90deg, #d4e055 0%, #6b31d4 100%); }
 
-.fixture .fx-date {
-  font-size: .7rem; font-weight: 700; text-transform: uppercase;
-  letter-spacing: .07em; color: rgba(0,0,0,.6);
-  min-width: 3.6rem; flex-shrink: 0;
+/* Left: date + time */
+.fixture .fx-when {
+  font-size: .75rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .05em; color: rgba(0,0,0,.65);
+  white-space: nowrap; flex-shrink: 0; min-width: 5rem;
 }
+
+/* Centre: team names */
 .fixture .fx-teams {
-  flex: 1; display: flex; align-items: center; justify-content: center; gap: .4rem;
-  min-width: 0;
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: .35rem;
+  min-width: 0; padding: 0 4px;
 }
 .fixture .fx-home {
   flex: 1; text-align: right; font-weight: 800; font-size: .88rem;
@@ -392,15 +386,16 @@ ul.fixtures { list-style: none; padding: 0; margin: 0; display: grid; gap: .45re
 }
 .fixture .fx-sep {
   font-size: .82rem; font-weight: 900; color: rgba(0,0,0,.7);
-  min-width: 2.4rem; text-align: center; flex-shrink: 0;
+  min-width: 2rem; text-align: center; flex-shrink: 0;
   font-variant-numeric: tabular-nums;
 }
 .fixture.played .fx-sep { color: rgba(0,0,0,.8); }
-.fixture .fx-time {
-  font-size: .7rem; font-weight: 700; text-transform: uppercase;
-  letter-spacing: .06em; color: rgba(0,0,0,.6);
-  min-width: 2.8rem; text-align: right; flex-shrink: 0;
-  font-variant-numeric: tabular-nums;
+
+/* Right: owner names */
+.fixture .fx-owners {
+  font-size: .72rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .04em; color: rgba(0,0,0,.6);
+  white-space: nowrap; flex-shrink: 0; text-align: right; min-width: 3rem;
 }
 
 /* ---- BRACKET ---- */
@@ -519,23 +514,24 @@ ul.fixtures { list-style: none; padding: 0; margin: 0; display: grid; gap: .45re
   .ladder-name  { font-size: .9rem; }
   .ladder-avatar { width: 1.8rem; height: 1.8rem; font-size: .82rem; }
 
-  /* Fixture pills: compress date/time, keep teams legible */
+  /* Fixture pills: compress on small screens */
   .fixture {
-    padding: .55rem .7rem .55rem .85rem;
-    gap: .3rem;
+    padding: 8px 14px;
+    gap: 5px;
   }
-  .fixture .fx-date {
-    min-width: 2.6rem;
-    font-size: .62rem;
-    letter-spacing: .04em;
+  .fixture .fx-when {
+    min-width: 0;
+    font-size: .65rem;
+    letter-spacing: .03em;
   }
-  .fixture .fx-time {
-    min-width: 2.4rem;
+  .fixture .fx-owners {
+    min-width: 0;
     font-size: .62rem;
+    letter-spacing: .02em;
   }
   .fixture .fx-home,
-  .fixture .fx-away { font-size: .82rem; }
-  .fixture .fx-sep  { min-width: 1.8rem; font-size: .78rem; }
+  .fixture .fx-away { font-size: .8rem; }
+  .fixture .fx-sep  { min-width: 1.6rem; font-size: .75rem; }
 
   /* View button: full width on small screens */
   .view-btn-wrap { margin-top: 2rem; }
@@ -565,15 +561,15 @@ ul.fixtures { list-style: none; padding: 0; margin: 0; display: grid; gap: .45re
   .ladder-header {
     grid-template-columns: 1.8rem 2rem 1fr 3.8rem 3.4rem;
   }
-  .fixture .fx-date { display: none; }
-  .fixture .fx-time { min-width: 2.2rem; }
+  .fixture .fx-when { display: none; }
+  .fixture .fx-owners { min-width: 0; font-size: .6rem; }
 }
 
 /* Tablet and up: restore full comfort */
 @media(min-width: 600px) {
   h1 { font-size: 3.5rem; }
   .draft-grid { grid-template-columns: 300px 1fr; }
-  .fixture .fx-date { min-width: 3.6rem; }
+  .fixture .fx-when { min-width: 5rem; }
 }
 
 @media(min-width: 1000px) {
