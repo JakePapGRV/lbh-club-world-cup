@@ -592,6 +592,10 @@ ul.fixtures { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; 
 .score-row button { margin-left:auto; padding:.45rem .8rem; min-height:36px; font-size:.82rem; }
 
 /* ---- TIPPING ---- */
+/* tipping ladder drops the "Tipped" column → 4 cols (overrides the shared 5-col ladder grid at every breakpoint via higher specificity) */
+.tip-ladder .ladder-header,
+.tip-ladder .ladder-row { grid-template-columns: 2.6rem 2.5rem 1fr 4.5rem; }
+
 .tip-section { margin-top:1.6rem; }
 .tip-date { font-size:.8rem; text-transform:uppercase; letter-spacing:.05em; color:var(--text-2); margin:1rem 0 .5rem; }
 .tip-group { margin-bottom:.4rem; }
