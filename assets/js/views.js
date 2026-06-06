@@ -193,6 +193,86 @@ export function renderDraft(s, isAdmin, myId) {
   return head + identity + progress + onclock + `<div class="draft-grid">${rosters}${pickpane}</div>`;
 }
 
+// ----------------------------------------------------------------- Teams
+
+function fxPill(f) {
+  const sn = (n) => n ? (n.length > 5 ? n.slice(0, 4) + '..' : n) : '—';
+  const when = [f.short_date_label, f.time_label].filter(Boolean).join(' ');
+  const owners = (f.home_owner || f.away_owner) ? `${sn(f.home_owner)} v ${sn(f.away_owner)}` : '';
+  return `
+  <li class="fixture ${f.status === 'finished' ? 'played' : ''}">
+    <span class="fx-when">${esc(when || 'TBC')}</span>
+    <div class="fx-teams">
+      <span class="fx-home">${esc(f.home_name || 'TBD')}</span>
+      <span class="fx-sep">${f.status === 'finished' ? `${f.home_score}&ndash;${f.away_score}` : 'v'}</span>
+      <span class="fx-away">${esc(f.away_name || 'TBD')}</span>
+    </div>
+    <span class="fx-owners">${esc(owners)}</span>
+  </li>`;
+}
+
+export function renderTeamsOverview(players) {
+  const hasPicks = players.some((p) => p.teams.length);
+  if (!hasPicks) return `<h1>Teams</h1><p class="hint">No teams drafted yet — come back once the draft starts.</p>`;
+  return `
+  <h1>Teams</h1>
+  <div class="teams-grid">
+    ${players.filter((p) => p.teams.length).map((p) => `
+      <a class="team-card" href="#/draft/player/${p.id}">
+        <span class="team-card-name">${esc(p.name)}</span>
+        <ul class="team-card-list">
+          ${p.teams.map((t) => `<li>${esc(t.name)}</li>`).join('')}
+        </ul>
+        <span class="team-card-chevron">›</span>
+      </a>`).join('')}
+  </div>`;
+}
+
+export function renderPlayerView(pv) {
+  if (!pv) return `<p class="hint">Player not found.</p>`;
+  const { player, teams, fixtures } = pv;
+  const upcoming = fixtures.filter((f) => f.status !== 'finished');
+  const played = [...fixtures.filter((f) => f.status === 'finished')].reverse();
+  return `
+  <a class="back-link" href="#/draft">‹ All Teams</a>
+  <h1>${esc(player.name)}</h1>
+  <div class="player-teams-row">
+    ${teams.map((t) => `<a class="player-team-badge" href="#/draft/team/${t.id}">${esc(t.name)}</a>`).join('')}
+  </div>
+  ${upcoming.length ? `
+  <section class="fxgroup">
+    <h3 class="section-label">Upcoming</h3>
+    <ul class="fixtures">${upcoming.map(fxPill).join('')}</ul>
+  </section>` : `<p class="hint" style="margin-top:1rem">No upcoming fixtures.</p>`}
+  ${played.length ? `
+  <section class="fxgroup">
+    <h3 class="section-label">Results</h3>
+    <ul class="fixtures">${played.map(fxPill).join('')}</ul>
+  </section>` : ''}
+  <div class="view-btn-wrap"><a class="view-btn" href="#/draft">‹ All Teams</a></div>`;
+}
+
+export function renderTeamView(tv) {
+  if (!tv) return `<p class="hint">Team not found.</p>`;
+  const { team, fixtures } = tv;
+  const upcoming = fixtures.filter((f) => f.status !== 'finished');
+  const played = [...fixtures.filter((f) => f.status === 'finished')].reverse();
+  return `
+  <a class="back-link" href="#/draft">‹ All Teams</a>
+  <h1>${esc(team.name)}</h1>
+  ${upcoming.length ? `
+  <section class="fxgroup">
+    <h3 class="section-label">Upcoming</h3>
+    <ul class="fixtures">${upcoming.map(fxPill).join('')}</ul>
+  </section>` : `<p class="hint" style="margin-top:1rem">No upcoming fixtures for this team.</p>`}
+  ${played.length ? `
+  <section class="fxgroup">
+    <h3 class="section-label">Results</h3>
+    <ul class="fixtures">${played.map(fxPill).join('')}</ul>
+  </section>` : ''}
+  <div class="view-btn-wrap"><a class="view-btn" href="#/draft">‹ All Teams</a></div>`;
+}
+
 // ----------------------------------------------------------------- Admin
 export function renderAdmin({ groups, players, teams, settings, mode, notice, problem }) {
   const teamOptions = (sel) => teams.map((t) => `<option value="${t.id}" ${sel === t.id ? 'selected' : ''}>${esc(t.name)}</option>`).join('');

@@ -2,8 +2,8 @@
 // Pages base path with no server rewrites.
 
 import { store } from './store.js?v=5';
-import { getLadder, getFixturesView, getBracket, getDraftState } from './compute.js?v=5';
-import { renderLadder, renderFixtures, renderBracket, renderDraft, renderAdmin, renderLogin } from './views.js?v=12';
+import { getLadder, getFixturesView, getBracket, getDraftState, getTeamsView, getPlayerView, getTeamView } from './compute.js?v=13';
+import { renderLadder, renderFixtures, renderBracket, renderDraft, renderAdmin, renderLogin, renderTeamsOverview, renderPlayerView, renderTeamView } from './views.js?v=13';
 
 const root = document.getElementById('root');
 const PASSWORD = (window.LBH_CONFIG || {}).ADMIN_PASSWORD || 'admin';
@@ -26,7 +26,7 @@ const NAV = [
   { route: '/', label: 'Ladder', key: 'ladder' },
   { route: '/fixtures', label: 'Fixtures', key: 'fixtures' },
   { route: '/bracket', label: 'Bracket', key: 'bracket' },
-  { route: '/draft', label: 'Draft', key: 'draft' },
+  { route: '/draft', label: 'Teams', key: 'draft' },
 ];
 
 function currentRoute() {
@@ -94,37 +94,49 @@ async function render(opts = {}) {
   }
 
   let body;
-  switch (route) {
-    case '/fixtures':
-      body = renderFixtures(getFixturesView(data));
-      break;
-    case '/bracket':
-      body = renderBracket(getBracket(data));
-      break;
-    case '/draft': {
-      const ds = getDraftState(data);
-      draftMyTurn = ds.settings.draft_status === 'in_progress' && !!ds.current && ds.current.playerId === myId;
-      body = renderDraft(ds, isAdmin, myId);
-      break;
-    }
-    case '/admin':
-      if (!isAdmin) { body = renderLogin(loginError); loginError = null; }
-      else {
-        body = renderAdmin({
-          groups: getFixturesView(data),
-          players: [...data.players].sort((a, b) => a.id - b.id),
-          teams: [...data.teams].sort((a, b) => (a.ranking ?? 1e9) - (b.ranking ?? 1e9)),
-          settings: data.settings,
-          mode: store.mode,
-          notice: flash && flash.notice,
-          problem: flash && flash.problem,
-        });
-        flash = null;
+  if (route.startsWith('/draft/player/')) {
+    const playerId = Number(route.split('/')[3]);
+    body = renderPlayerView(getPlayerView(data, playerId));
+  } else if (route.startsWith('/draft/team/')) {
+    const teamId = Number(route.split('/')[3]);
+    body = renderTeamView(getTeamView(data, teamId));
+  } else {
+    switch (route) {
+      case '/fixtures':
+        body = renderFixtures(getFixturesView(data));
+        break;
+      case '/bracket':
+        body = renderBracket(getBracket(data));
+        break;
+      case '/draft': {
+        const ds = getDraftState(data);
+        if (ds.settings.draft_status === 'complete') {
+          body = renderTeamsOverview(getTeamsView(data));
+        } else {
+          draftMyTurn = ds.settings.draft_status === 'in_progress' && !!ds.current && ds.current.playerId === myId;
+          body = renderDraft(ds, isAdmin, myId);
+        }
+        break;
       }
-      break;
-    case '/':
-    default:
-      body = renderLadder(getLadder(data));
+      case '/admin':
+        if (!isAdmin) { body = renderLogin(loginError); loginError = null; }
+        else {
+          body = renderAdmin({
+            groups: getFixturesView(data),
+            players: [...data.players].sort((a, b) => a.id - b.id),
+            teams: [...data.teams].sort((a, b) => (a.ranking ?? 1e9) - (b.ranking ?? 1e9)),
+            settings: data.settings,
+            mode: store.mode,
+            notice: flash && flash.notice,
+            problem: flash && flash.problem,
+          });
+          flash = null;
+        }
+        break;
+      case '/':
+      default:
+        body = renderLadder(getLadder(data));
+    }
   }
   paint(route, body);
   setAutoRefresh(route);

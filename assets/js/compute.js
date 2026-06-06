@@ -183,3 +183,45 @@ export function getLadder(data) {
     .map((p) => ({ ...p, points: totals[p.id] ?? 0, teamCount: teamCounts[p.id] ?? 0 }))
     .sort((a, b) => b.points - a.points || a.name.localeCompare(b.name));
 }
+
+export function getTeamsView(data) {
+  const teamById = byId(data.teams);
+  const rosterByPlayer = {};
+  for (const pick of data.picks) (rosterByPlayer[pick.player_id] ||= []).push(pick.team_id);
+  return [...data.players]
+    .sort((a, b) => (a.draft_slot ?? 99) - (b.draft_slot ?? 99) || a.name.localeCompare(b.name))
+    .map((p) => ({
+      ...p,
+      teams: (rosterByPlayer[p.id] || []).map((tid) => teamById[tid]).filter(Boolean).sort(rankSort),
+    }));
+}
+
+export function getPlayerView(data, playerId) {
+  const teamById = byId(data.teams);
+  const owners = ownerNames(data);
+  const player = data.players.find((p) => p.id === playerId);
+  if (!player) return null;
+  const teamIds = new Set(data.picks.filter((p) => p.player_id === playerId).map((p) => p.team_id));
+  return {
+    player,
+    teams: [...teamIds].map((tid) => teamById[tid]).filter(Boolean).sort(rankSort),
+    fixtures: [...data.fixtures]
+      .filter((f) => teamIds.has(f.home_team_id) || teamIds.has(f.away_team_id))
+      .sort(fxSort)
+      .map((f) => decorateFixture(f, teamById, owners)),
+  };
+}
+
+export function getTeamView(data, teamId) {
+  const teamById = byId(data.teams);
+  const owners = ownerNames(data);
+  const team = teamById[teamId];
+  if (!team) return null;
+  return {
+    team,
+    fixtures: [...data.fixtures]
+      .filter((f) => f.home_team_id === teamId || f.away_team_id === teamId)
+      .sort(fxSort)
+      .map((f) => decorateFixture(f, teamById, owners)),
+  };
+}
