@@ -57,7 +57,14 @@ function headerHtml(route) {
         <span class="brand-line">World Cup Draft</span>
       </span>
     </a>
-    <nav>${links}${adminArea}<button class="theme-toggle" data-action="toggle-theme">${isDark ? '☀ Light' : '☾ Dark'}</button></nav>
+    <nav class="topbar-nav">${links}${adminArea}</nav>
+    <div class="topbar-end">
+      <button class="theme-toggle" data-action="toggle-theme">${isDark ? '☀ Light' : '☾ Dark'}</button>
+      <button class="nav-burger" data-action="toggle-nav" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+    <div class="nav-drawer">${links}${adminArea}</div>
   </header>`;
 }
 
@@ -228,7 +235,9 @@ root.addEventListener('click', (e) => {
   const el = e.target.closest('[data-action]');
   if (!el || el.tagName === 'FORM') return;
   const action = el.dataset.action;
-  if (action === 'toggle-theme') {
+  if (action === 'toggle-nav') {
+    document.body.classList.toggle('nav-open');
+  } else if (action === 'toggle-theme') {
     applyTheme(document.body.dataset.theme !== 'dark');
     render();
   } else if (action === 'logout') {
@@ -252,5 +261,8 @@ root.addEventListener('click', (e) => {
   }
 });
 
-window.addEventListener('hashchange', () => render({ scrollToCurrent: true }));
+window.addEventListener('hashchange', () => {
+  document.body.classList.remove('nav-open');
+  render({ scrollToCurrent: true });
+});
 render({ scrollToCurrent: true });

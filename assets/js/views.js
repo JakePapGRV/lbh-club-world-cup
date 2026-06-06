@@ -38,7 +38,7 @@ export function renderFixtures(groups) {
     <section class="fxgroup">
       <ul class="fixtures">
         ${g.fixtures.map((f) => {
-          const when = [f.date_label, f.time_label].filter(Boolean).join(' ');
+          const when = [f.short_date_label, f.time_label].filter(Boolean).join(' ');
           const owners = (f.home_owner || f.away_owner)
             ? `${f.home_owner || '—'} v ${f.away_owner || '—'}` : '';
           return `
