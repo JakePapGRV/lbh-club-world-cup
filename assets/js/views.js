@@ -33,28 +33,36 @@ export function renderLadder(ladder) {
 // -------------------------------------------------------------- Fixtures
 export function renderFixtures(groups) {
   if (!groups.length) return `<h1>Fixtures</h1><p class="hint">No fixtures yet.</p>`;
+
+  const card = (f) => {
+    const scored = f.status === 'finished';
+    const sep = scored ? `${f.home_score}&ndash;${f.away_score}` : 'v';
+    return `
+    <div id="fx-${f.id}" class="fixture-card ${scored ? 'played' : ''}">
+      <div class="fxc-top">
+        <span class="fxc-time">${esc(f.time_label || 'TBC')}</span>
+        <span class="fxc-group">${esc(f.stage_label || '')}</span>
+      </div>
+      <div class="fxc-match">
+        <span class="fxc-team">${esc(f.home_name || 'TBD')}</span>
+        <span class="fxc-sep">${sep}</span>
+        <span class="fxc-team">${esc(f.away_name || 'TBD')}</span>
+      </div>
+      <div class="fxc-owners">
+        <span class="fxc-owner ${f.home_owner ? '' : 'dim'}">${esc(f.home_owner || '—')}</span>
+        <span class="fxc-vs">vs</span>
+        <span class="fxc-owner ${f.away_owner ? '' : 'dim'}">${esc(f.away_owner || '—')}</span>
+      </div>
+    </div>`;
+  };
+
   return `
   <h1>Fixtures</h1>
+  <p class="hint">Times shown in AEST. Owner names appear once the draft is complete.</p>
   ${groups.map((g) => `
-    <section class="fxgroup">
-      <ul class="fixtures">
-        ${g.fixtures.map((f) => {
-          const when = [f.short_date_label, f.time_label].filter(Boolean).join(' ');
-          const shortName = (n) => n ? (n.length > 5 ? n.slice(0, 4) + '..' : n) : '—';
-          const owners = (f.home_owner || f.away_owner)
-            ? `${shortName(f.home_owner)} v ${shortName(f.away_owner)}` : '';
-          return `
-          <li id="fx-${f.id}" class="fixture ${f.status === 'finished' ? 'played' : ''}">
-            <span class="fx-when">${esc(when || 'TBC')}</span>
-            <div class="fx-teams">
-              <span class="fx-home">${esc(f.home_name || 'TBD')}</span>
-              <span class="fx-sep">${f.status === 'finished' ? `${f.home_score}&ndash;${f.away_score}` : 'v'}</span>
-              <span class="fx-away">${esc(f.away_name || 'TBD')}</span>
-            </div>
-            <span class="fx-owners">${esc(owners)}</span>
-          </li>`;
-        }).join('')}
-      </ul>
+    <section class="fxday">
+      <div class="fxday-header">${esc(g.title)}</div>
+      ${g.fixtures.map(card).join('')}
     </section>`).join('')}
   <div class="view-btn-wrap"><a class="view-btn" href="#/">View Ladder</a></div>`;
 }

@@ -38,7 +38,8 @@
 }
 
 body[data-route="ladder"]   { --h1-color:#8bffec; --nav-active-bg:#8bffec; --nav-active-color:#1e1e1e; }
-body[data-route="fixtures"] { --h1-color:#f4ff7b; --nav-active-bg:#f4ff7b; --nav-active-color:#1e1e1e; }
+body[data-route="fixtures"] { --h1-color:#c8a832; --nav-active-bg:#c8a832; --nav-active-color:#0d1f14; }
+body[data-theme="dark"][data-route="fixtures"] { --bg:#0d1f14; --bg-2:#162d1e; --bg-3:#1e3a26; --border:rgba(255,255,255,0.07); }
 body[data-route="bracket"]  { --h1-color:#4d7cff; --nav-active-bg:#4d7cff; --nav-active-color:#fff; }
 body[data-route="draft"]    { --h1-color:#ff4b2b; --nav-active-bg:#ff4b2b; --nav-active-color:#fff; }
 body[data-route="admin"], body[data-route=""] { --h1-color:#9333EA; --nav-active-bg:#9333EA; --nav-active-color:#fff; }
@@ -678,6 +679,90 @@ ul.fixtures { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; 
 
 @media(min-width: 1000px) {
   .team-buttons { grid-template-columns: 1fr 1fr; }
+}
+
+/* ============================================================
+   Fixtures card layout
+============================================================ */
+
+/* Date group header  e.g. "| Thu 11 Jun" */
+.fxday { margin-bottom: 1.8rem; }
+
+.fxday-header {
+  display: flex; align-items: center; gap: .65rem;
+  margin-bottom: .75rem;
+  font-family: var(--font); font-weight: 800; font-size: 1.45rem;
+  letter-spacing: .01em; color: #fff;
+}
+.fxday-header::before {
+  content: ''; display: block; flex-shrink: 0;
+  width: 4px; height: 1.2em; border-radius: 2px;
+  background: #c8a832;
+}
+
+/* Individual fixture card */
+.fixture-card {
+  background: #162d1e;
+  border-radius: 10px;
+  border-left: 3px solid #c8a832;
+  padding: 11px 14px 10px;
+  margin-bottom: 8px;
+}
+.fixture-card.played { border-left-color: rgba(200,168,50,0.55); }
+
+/* Top row: time + group label */
+.fxc-top {
+  display: flex; justify-content: space-between;
+  align-items: baseline; margin-bottom: 5px;
+}
+.fxc-time {
+  font-family: var(--font); font-weight: 700; font-size: .82rem;
+  color: #c8a832; letter-spacing: .05em;
+}
+.fxc-group {
+  font-family: var(--font); font-weight: 600; font-size: .72rem;
+  color: rgba(255,255,255,0.42); text-transform: uppercase; letter-spacing: .08em;
+}
+
+/* Middle row: team names + score/v */
+.fxc-match {
+  display: flex; align-items: center; justify-content: center;
+  gap: .5rem; margin-bottom: 5px;
+}
+.fxc-team {
+  font-family: var(--font); font-weight: 900; font-size: 1.2rem;
+  text-transform: uppercase; color: #fff; letter-spacing: .02em;
+  flex: 1;
+}
+.fxc-match .fxc-team:first-child { text-align: right; }
+.fxc-match .fxc-team:last-child  { text-align: left; }
+.fxc-sep {
+  font-family: var(--font); font-weight: 900; font-size: 1.2rem;
+  color: #c8a832; min-width: 2.8rem; text-align: center;
+  flex-shrink: 0; letter-spacing: .02em;
+}
+
+/* Bottom row: owner names */
+.fxc-owners {
+  display: flex; align-items: center; justify-content: center;
+  gap: .28rem;
+}
+.fxc-owner {
+  font-family: var(--font); font-weight: 700; font-size: .82rem;
+  color: #c8a832; letter-spacing: .03em;
+}
+.fxc-owner.dim { color: rgba(255,255,255,0.3); font-weight: 400; }
+.fxc-vs {
+  font-family: var(--font); font-weight: 400; font-size: .72rem;
+  color: rgba(255,255,255,0.45);
+}
+
+/* Mobile */
+@media(max-width:480px) {
+  .fxday-header { font-size: 1.2rem; }
+  .fxc-team { font-size: 1rem; }
+  .fxc-sep  { font-size: 1rem; min-width: 2.2rem; }
+  .fxc-time, .fxc-owner { font-size: .76rem; }
 }
 
 /* ============================================================
