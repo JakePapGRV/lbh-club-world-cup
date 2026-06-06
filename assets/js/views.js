@@ -40,7 +40,7 @@ export function renderFixtures(groups) {
       <ul class="fixtures">
         ${g.fixtures.map((f) => `
           <li id="fx-${f.id}" class="fixture ${f.status === 'finished' ? 'played' : ''}">
-            <span class="fx-date">${esc(g.title)}</span>
+            <span class="fx-date">${esc(f.stage_label)}</span>
             <div class="fx-teams">
               <span class="fx-home">${esc(f.home_name || 'TBD')}</span>
               <span class="fx-sep">${f.status === 'finished' ? `${f.home_score}&ndash;${f.away_score}` : 'v'}</span>
