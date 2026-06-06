@@ -6,9 +6,9 @@
 //   - Knockouts decided by penalties: the advancing team takes the FULL win
 //     points (there is no 0.5 outside the group stage).
 //   - Third-place playoff: scored as a 1-point win (configurable on/off).
-//   - Own-vs-own (one player owns both teams in a fixture): the player must
-//     nominate a winner beforehand. Nominated team wins -> full points; a draw
-//     -> 0.5; nominated team loses (or no nomination) -> 0.
+//   - Own-vs-own (one player owns both teams in a fixture): a guaranteed
+//     result. A draw scores 0.5; any decisive result scores the full win
+//     points (the player is certain to own whichever team wins).
 
 export const STAGES = ['group', 'R32', 'R16', 'QF', 'SF', 'third', 'final'];
 
@@ -46,11 +46,10 @@ function winnerOf(fx) {
  * @param {object} fx - { id, stage, homeTeamId, awayTeamId, homeScore, awayScore, winnerTeamId }
  * @param {object} opts
  *   - ownership:   Map or object of teamId -> playerId (undrafted teams absent)
- *   - nominations: object of fixtureId -> teamId the owner nominated (own-vs-own)
  *   - stagePoints: override for DEFAULT_STAGE_POINTS
  * @returns {Object<string, number>} playerId -> points earned from this fixture
  */
-export function scoreFixture(fx, { ownership, nominations = {}, stagePoints = DEFAULT_STAGE_POINTS } = {}) {
+export function scoreFixture(fx, { ownership, stagePoints = DEFAULT_STAGE_POINTS } = {}) {
   const homeOwner = ownerOf(ownership, fx.homeTeamId);
   const awayOwner = ownerOf(ownership, fx.awayTeamId);
   const winValue = stagePoints[fx.stage] ?? 0;
@@ -65,15 +64,11 @@ export function scoreFixture(fx, { ownership, nominations = {}, stagePoints = DE
   const drawn = isGroup && fx.homeScore === fx.awayScore;
   const winner = winnerOf(fx);
 
-  // Same player owns BOTH teams -> own-vs-own nomination rules.
+  // Same player owns BOTH teams -> guaranteed result: a draw scores 0.5, any
+  // decisive result scores the full win points (no winner to nominate, since
+  // whichever of their teams wins, the player owns it).
   if (homeOwner != null && homeOwner === awayOwner) {
-    if (drawn) {
-      add(homeOwner, 0.5);
-    } else {
-      const nominated = nominations[fx.id];
-      if (nominated != null && nominated === winner) add(homeOwner, winValue);
-      // wrong nomination, or none -> 0 ("you must choose the winner to get the points")
-    }
+    add(homeOwner, drawn ? 0.5 : winValue);
     return result;
   }
 

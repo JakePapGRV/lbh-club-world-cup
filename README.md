@@ -26,9 +26,9 @@ five of you see the same live ladder from your own phones.
 | Final | 5 | — |
 
 Knockouts decided by penalties: the team that advances takes the full win
-points. If you own **both** teams in a match, nominate a winner in advance —
-correct nomination scores the win, a draw scores 0.5, a wrong/no nomination
-scores 0.
+points. If you own **both** teams in a match it's a guaranteed result — any
+decisive result scores the full win points (whichever of your teams wins), and
+a draw scores 0.5.
 
 ## Hosting — it's already on GitHub Pages
 

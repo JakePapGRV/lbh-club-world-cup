@@ -45,7 +45,6 @@ function freshLocalState() {
     teams: TEAMS.map((t, i) => ({ id: i + 1, name: t.name, code: t.code, grp: t.grp, ranking: t.ranking, api_id: null })),
     fixtures: seedGroupFixtures(),
     picks: [],
-    nominations: [],
     nextFixtureId: 1000,
   };
 }
@@ -64,7 +63,7 @@ const localBackend = {
   mode: 'local',
   async loadAll() {
     const s = lsLoad();
-    return { settings: s.settings, players: s.players, teams: s.teams, fixtures: s.fixtures, picks: s.picks, nominations: s.nominations };
+    return { settings: s.settings, players: s.players, teams: s.teams, fixtures: s.fixtures, picks: s.picks };
   },
   async startDraft() {
     const s = lsLoad();
@@ -88,7 +87,6 @@ const localBackend = {
   },
   async resetDraft() {
     const s = lsLoad();
-    s.nominations = [];
     s.picks = [];
     s.players.forEach((p) => { p.draft_slot = null; });
     s.settings.draft_status = 'not_started';
@@ -112,7 +110,6 @@ const localBackend = {
   },
   async deleteFixture(fixtureId) {
     const s = lsLoad();
-    s.nominations = s.nominations.filter((n) => n.fixture_id !== fixtureId);
     s.fixtures = s.fixtures.filter((x) => x.id !== fixtureId);
     lsSave(s);
   },
@@ -126,12 +123,6 @@ const localBackend = {
     s.settings.score_third_place = Boolean(on);
     lsSave(s);
   },
-  async setNomination(fixtureId, playerId, teamId) {
-    const s = lsLoad();
-    s.nominations = s.nominations.filter((n) => !(n.fixture_id === fixtureId && n.player_id === playerId));
-    if (teamId != null) s.nominations.push({ fixture_id: fixtureId, player_id: playerId, team_id: teamId });
-    lsSave(s);
-  },
 };
 
 // =========================================================================
@@ -140,15 +131,14 @@ const localBackend = {
 const supabaseBackend = {
   mode: 'supabase',
   async loadAll() {
-    const [settings, players, teams, fixtures, picks, nominations] = await Promise.all([
+    const [settings, players, teams, fixtures, picks] = await Promise.all([
       sbSelect('settings', 'select=*&id=eq.1'),
       sbSelect('players', 'select=*&order=id.asc'),
       sbSelect('teams', 'select=*&order=ranking.asc.nullslast,name.asc'),
       sbSelect('fixtures', 'select=*&order=kickoff.asc.nullslast,id.asc'),
       sbSelect('picks', 'select=*&order=pick_number.asc'),
-      sbSelect('nominations', 'select=*'),
     ]);
-    return { settings: (settings && settings[0]) || null, players: players || [], teams: teams || [], fixtures: fixtures || [], picks: picks || [], nominations: nominations || [] };
+    return { settings: (settings && settings[0]) || null, players: players || [], teams: teams || [], fixtures: fixtures || [], picks: picks || [] };
   },
   async startDraft() {
     const players = (await sbSelect('players', 'select=id&order=id.asc')) || [];
@@ -173,7 +163,6 @@ const supabaseBackend = {
     if ((picks || []).length + 1 >= seq.length) await sbUpdate('settings', 'id=eq.1', { draft_status: 'complete' });
   },
   async resetDraft() {
-    await sbDelete('nominations', 'player_id=gt.0');
     await sbDelete('picks', 'pick_number=gt.0');
     await sbUpdate('players', 'id=gt.0', { draft_slot: null });
     await sbUpdate('settings', 'id=eq.1', { draft_status: 'not_started', draft_started_at: null });
@@ -188,7 +177,6 @@ const supabaseBackend = {
     return rows && rows[0] && rows[0].id;
   },
   async deleteFixture(fixtureId) {
-    await sbDelete('nominations', `fixture_id=eq.${fixtureId}`);
     await sbDelete('fixtures', `id=eq.${fixtureId}`);
   },
   async updatePlayerNames(map) {
@@ -197,10 +185,6 @@ const supabaseBackend = {
   },
   async setThirdPlace(on) {
     await sbUpdate('settings', 'id=eq.1', { score_third_place: Boolean(on) });
-  },
-  async setNomination(fixtureId, playerId, teamId) {
-    await sbDelete('nominations', `fixture_id=eq.${fixtureId}&player_id=eq.${playerId}`);
-    if (teamId != null) await sbInsert('nominations', { fixture_id: fixtureId, player_id: playerId, team_id: teamId });
   },
 };
 

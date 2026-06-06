@@ -164,13 +164,12 @@ export function getBracket(data) {
 
 export function getLadder(data) {
   const ownership = ownershipMap(data.picks);
-  const nominations = Object.fromEntries(data.nominations.map((n) => [n.fixture_id, n.team_id]));
   const finished = data.fixtures
     .filter((f) => f.status === 'finished')
     .map((f) => ({ id: f.id, stage: f.stage, homeTeamId: f.home_team_id, awayTeamId: f.away_team_id, homeScore: f.home_score, awayScore: f.away_score, winnerTeamId: f.winner_team_id }));
 
   const stagePoints = { ...DEFAULT_STAGE_POINTS, third: data.settings.score_third_place ? 1 : 0 };
-  const totals = computeLadder(finished, { ownership, nominations, stagePoints });
+  const totals = computeLadder(finished, { ownership, stagePoints });
 
   const alive = survivingTeams(data.fixtures);
   const teamCounts = {};

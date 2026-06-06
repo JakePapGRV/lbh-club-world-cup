@@ -9,24 +9,24 @@ export function renderLadder(ladder) {
   const initials = (name) => name ? name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase() : '?';
   return `
   <h1>Ladder</h1>
-  <div class=”ladder-header”>
-    <span class=”lh-rank”>#</span>
-    <span class=”lh-avatar”></span>
-    <span class=”lh-name”>Player</span>
-    <span class=”lh-teams”>Teams</span>
-    <span class=”lh-pts”>Pts</span>
+  <div class="ladder-header">
+    <span class="lh-rank">#</span>
+    <span class="lh-avatar"></span>
+    <span class="lh-name">Player</span>
+    <span class="lh-teams">Teams</span>
+    <span class="lh-pts">Pts</span>
   </div>
-  <div class=”ladder-list”>
+  <div class="ladder-list">
     ${ladder.map((p, i) => `
-      <div class=”ladder-row ${i === 0 ? 'leader' : ''}”>
-        <span class=”ladder-rank”>${i + 1}</span>
-        <span class=”ladder-avatar”>${initials(p.name)}</span>
-        <span class=”ladder-name”>${esc(p.name)}</span>
-        <span class=”ladder-teams”>${p.teamCount}</span>
-        <span class=”ladder-pts”>${p.points}</span>
+      <div class="ladder-row ${i === 0 ? 'leader' : ''}">
+        <span class="ladder-rank">${i + 1}</span>
+        <span class="ladder-avatar">${initials(p.name)}</span>
+        <span class="ladder-name">${esc(p.name)}</span>
+        <span class="ladder-teams">${p.teamCount}</span>
+        <span class="ladder-pts">${p.points}</span>
       </div>`).join('')}
   </div>
-  <p class=”hint” style=”margin-top:1rem”>”Teams left” counts only your drafted nations still in the tournament. Points: group win = 1, draw = 0.5. Knockouts: R32 = 1, R16 = 2, QF = 3, SF = 4, Final = 5.</p>`;
+  <p class="hint" style="margin-top:1rem">"Teams left" counts only your drafted nations still in the tournament. Points: group win = 1, draw = 0.5. Knockouts: R32 = 1, R16 = 2, QF = 3, SF = 4, Final = 5. Own both teams in a match? Any decisive result scores the full win, a draw scores 0.5.</p>`;
 }
 
 // -------------------------------------------------------------- Fixtures

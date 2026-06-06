@@ -79,28 +79,28 @@ test('own-vs-own group draw: owner gets 0.5', () => {
   assert.deepEqual(pts, { A: 0.5 });
 });
 
-test('own-vs-own: correct nomination earns full points', () => {
+test('own-vs-own decisive result earns full win points (no nomination needed)', () => {
   const pts = scoreFixture(
     { id: 6, stage: 'group', homeTeamId: 10, awayTeamId: 30, homeScore: 2, awayScore: 0 },
-    { ownership, nominations: { 6: 10 } }
+    { ownership }
   );
   assert.deepEqual(pts, { A: 1 });
 });
 
-test('own-vs-own: wrong nomination earns nothing', () => {
+test('own-vs-own earns full points whichever of the player\'s teams wins', () => {
   const pts = scoreFixture(
-    { id: 7, stage: 'group', homeTeamId: 10, awayTeamId: 30, homeScore: 2, awayScore: 0 },
-    { ownership, nominations: { 7: 30 } }
-  );
-  assert.deepEqual(pts, {});
-});
-
-test('own-vs-own: no nomination earns nothing', () => {
-  const pts = scoreFixture(
-    { id: 8, stage: 'group', homeTeamId: 10, awayTeamId: 30, homeScore: 2, awayScore: 0 },
+    { id: 7, stage: 'group', homeTeamId: 10, awayTeamId: 30, homeScore: 0, awayScore: 2 },
     { ownership }
   );
-  assert.deepEqual(pts, {});
+  assert.deepEqual(pts, { A: 1 });
+});
+
+test('own-vs-own knockout earns the full round win points', () => {
+  const pts = scoreFixture(
+    { id: 8, stage: 'R16', homeTeamId: 10, awayTeamId: 30, winnerTeamId: 30 },
+    { ownership }
+  );
+  assert.deepEqual(pts, { A: 2 });
 });
 
 test('undrafted team winning awards no points', () => {
