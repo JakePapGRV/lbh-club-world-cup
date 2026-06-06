@@ -1,9 +1,9 @@
 // SPA router + event wiring. Hash-based routing so it works under any GitHub
 // Pages base path with no server rewrites.
 
-import { store } from './store.js?v=2';
-import { getLadder, getFixturesView, getBracket, getDraftState } from './compute.js?v=2';
-import { renderLadder, renderFixtures, renderBracket, renderDraft, renderAdmin, renderLogin } from './views.js?v=2';
+import { store } from './store.js?v=3';
+import { getLadder, getFixturesView, getBracket, getDraftState } from './compute.js?v=3';
+import { renderLadder, renderFixtures, renderBracket, renderDraft, renderAdmin, renderLogin } from './views.js?v=3';
 
 const root = document.getElementById('root');
 const PASSWORD = (window.LBH_CONFIG || {}).ADMIN_PASSWORD || 'admin';
@@ -51,7 +51,7 @@ function headerHtml(route) {
   return `
   <header class="topbar">
     <a class="brand" href="#/">
-      <img class="brand-logo-img" src="assets/img/logo.svg" alt="" width="38" height="45" />
+      <img class="brand-logo-img" src="assets/img/logo.svg" alt="" width="80" height="36" />
       <span class="brand-text">
         <span class="brand-line">LBH Club</span>
         <span class="brand-line">World Cup Draft</span>
