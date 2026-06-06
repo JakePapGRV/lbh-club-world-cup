@@ -8,6 +8,7 @@
 // pooler" URI from Supabase → Project Settings → Database). src/db/index.js opens
 // it with SSL automatically for any non-localhost host.
 import { syncFromApi, scoreProviderStatus } from '../src/api/sync.js';
+import { findWorldCupLeagues } from '../src/api/sportmonks.js';
 
 const { name, tokenSet } = scoreProviderStatus();
 
@@ -30,10 +31,25 @@ try {
 
   if (r.fetched === 0) {
     console.warn(
-      '⚠ The provider returned 0 World Cup fixtures. The SportMonks FREE tier does ' +
-        'NOT include the FIFA World Cup, so on a free plan nothing will ever sync. ' +
-        'Confirm your plan covers it, and that SPORTMONKS_WC_LEAGUE_ID is correct.'
+      '⚠ The provider returned 0 World Cup fixtures. Either the plan does not cover ' +
+        'the FIFA World Cup, or the league id is wrong ' +
+        `(SPORTMONKS_WC_LEAGUE_ID, currently ${process.env.SPORTMONKS_WC_LEAGUE_ID || 26618}).`
     );
+    if (name === 'sportmonks') {
+      try {
+        const leagues = await findWorldCupLeagues(process.env.SPORTMONKS_TOKEN);
+        if (!leagues.length) {
+          console.warn('  No leagues matched "world cup" for this token — check the token / plan.');
+        } else {
+          console.warn('  Leagues this token can search — set SPORTMONKS_WC_LEAGUE_ID to the one with fixtures > 0:');
+          for (const l of leagues) {
+            console.warn(`    id=${l.id}  name="${l.name}"  fixtures_in_window=${l.fixtures}${l.hasMore ? '+' : ''}`);
+          }
+        }
+      } catch (e) {
+        console.warn(`  League lookup failed: ${e.message}`);
+      }
+    }
   }
   if (r.unmatched.length) {
     console.warn(

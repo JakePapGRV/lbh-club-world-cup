@@ -130,3 +130,42 @@ export async function fetchMatches(token, fetchImpl = fetch) {
   }
   return normalizeResponse(all);
 }
+
+/**
+ * Diagnostic for when a normal fetch returns no World Cup fixtures: search the
+ * provider's leagues for "world cup" and, for each hit, count fixtures in the
+ * tournament window. This reveals which league id THIS token can actually pull
+ * (the one with fixtures > 0 is the value to use for SPORTMONKS_WC_LEAGUE_ID).
+ * Returns [{ id, name, fixtures, hasMore }]; a single league's probe failing is
+ * swallowed (reported as 0) so one bad id doesn't hide the others.
+ */
+export async function findWorldCupLeagues(token, fetchImpl = fetch) {
+  if (!token) throw new Error('SPORTMONKS_TOKEN is not set');
+  const searchUrl = `${BASE}/leagues/search/${encodeURIComponent('world cup')}?api_token=${token}`;
+  const res = await fetchImpl(searchUrl);
+  if (!res.ok) throw new Error(`leagues/search returned ${res.status} ${res.statusText || ''}`.trim());
+  const json = await res.json();
+  const leagues = Array.isArray(json.data) ? json.data : [];
+
+  const out = [];
+  for (const l of leagues) {
+    const url = new URL(`${BASE}/fixtures/between/${WC_FROM}/${WC_TO}`);
+    url.searchParams.set('api_token', token);
+    url.searchParams.set('filters', `fixtureLeagues:${l.id}`);
+    url.searchParams.set('per_page', '50');
+    let fixtures = 0;
+    let hasMore = false;
+    try {
+      const fr = await fetchImpl(url.toString());
+      if (fr.ok) {
+        const fj = await fr.json();
+        fixtures = Array.isArray(fj.data) ? fj.data.length : 0;
+        hasMore = Boolean(fj.pagination?.has_more);
+      }
+    } catch {
+      // ignore a single league's probe failure; it's reported as 0 fixtures
+    }
+    out.push({ id: l.id, name: l.name, fixtures, hasMore });
+  }
+  return out;
+}

@@ -2,7 +2,7 @@
 // the shared import/sync layer against the in-memory database.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizeFixture, normalizeResponse, mapStageName } from './sportmonks.js';
+import { normalizeFixture, normalizeResponse, mapStageName, findWorldCupLeagues } from './sportmonks.js';
 import { importMatches, syncScores } from './sync.js';
 import { ensureSchema } from '../db/setup.js';
 import { query } from '../db/index.js';
@@ -73,6 +73,35 @@ test('normalizeFixture reads participants, current score, state and winner', () 
 test('normalizeResponse filters to the World Cup league', () => {
   const norm = normalizeResponse([groupMatch, finalMatch, otherLeague]);
   assert.equal(norm.length, 2);
+});
+
+test('findWorldCupLeagues searches leagues and counts fixtures per candidate', async () => {
+  const fakeFetch = async (rawUrl) => {
+    const url = decodeURIComponent(rawUrl); // URLSearchParams encodes the ':' in the filter
+    if (url.includes('/leagues/search/')) {
+      return {
+        ok: true,
+        json: async () => ({
+          data: [
+            { id: 732, name: 'World Cup' },
+            { id: 5, name: 'World Cup Qualification CONMEBOL' },
+          ],
+        }),
+      };
+    }
+    if (url.includes('fixtureLeagues:732')) {
+      return { ok: true, json: async () => ({ data: new Array(50).fill({}), pagination: { has_more: true } }) };
+    }
+    return { ok: true, json: async () => ({ data: [] }) }; // other league: nothing in window
+  };
+
+  const out = await findWorldCupLeagues('tok', fakeFetch);
+  assert.equal(out.length, 2);
+  const wc = out.find((l) => l.id === 732);
+  assert.equal(wc.name, 'World Cup');
+  assert.equal(wc.fixtures, 50);
+  assert.equal(wc.hasMore, true);
+  assert.equal(out.find((l) => l.id === 5).fixtures, 0); // qualifier has none in the window
 });
 
 test('import + sync work end to end against the database', async () => {
