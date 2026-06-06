@@ -102,10 +102,10 @@ a:hover { text-decoration: underline; }
 .theme-toggle:hover { border-color: rgba(255,255,255,.5); color: #fff; background: rgba(255,255,255,.08); }
 .theme-toggle:active { transform: scale(.95); }
 
-/* ---- TOPBAR — always single row ---- */
+/* ---- TOPBAR ---- */
 .topbar {
   display: flex;
-  flex-wrap: nowrap;          /* never wrap — logo + nav on one line */
+  flex-wrap: wrap;
   align-items: center;
   gap: .3rem;
   padding: calc(.5rem + env(safe-area-inset-top,0)) max(.9rem,env(safe-area-inset-right)) .5rem max(.9rem,env(safe-area-inset-left));
@@ -127,32 +127,85 @@ a:hover { text-decoration: underline; }
   letter-spacing: .18em; text-transform: uppercase; color: #00D4B4;
 }
 
-/* Nav sits on right, scrolls horizontally if needed */
-.topbar nav {
+/* Desktop nav — sits on right */
+.topbar-nav {
   display: flex; align-items: center; gap: .15rem;
   margin-left: auto;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch; scrollbar-width: none;
   flex-shrink: 1;
 }
-.topbar nav::-webkit-scrollbar { display: none; }
+.topbar-nav::-webkit-scrollbar { display: none; }
 
-.topbar nav a, .topbar nav .link {
+.topbar-nav a, .topbar-nav .link {
   font-family: var(--font); font-weight: 700; font-size: .85rem;
   text-transform: uppercase; letter-spacing: .08em;
   color: rgba(255,255,255,0.5); padding: .32rem .6rem;
   border-radius: 5px; white-space: nowrap;
   transition: color .12s, background .12s;
 }
-.topbar nav a:hover { color: #fff; background: rgba(255,255,255,.10); text-decoration: none; }
-.topbar nav a.active {
+.topbar-nav a:hover { color: #fff; background: rgba(255,255,255,.10); text-decoration: none; }
+.topbar-nav a.active {
   background: var(--nav-active-bg);
   color: var(--nav-active-color);
   transition: background 0.4s ease, color 0.4s ease;
 }
 
+/* Theme toggle + burger sit together on the far right */
+.topbar-end {
+  display: flex; align-items: center; gap: .4rem; flex-shrink: 0;
+}
+
+/* ---- BURGER BUTTON (mobile only) ---- */
+.nav-burger {
+  display: none;
+  flex-direction: column; justify-content: center; align-items: center;
+  gap: 5px; width: 36px; height: 36px; min-height: unset;
+  background: none !important; border: none !important;
+  cursor: pointer; padding: 6px; border-radius: 6px; flex-shrink: 0;
+  transition: background .15s !important;
+}
+.nav-burger span {
+  display: block; width: 18px; height: 2px;
+  background: rgba(255,255,255,.75); border-radius: 2px;
+  transition: transform .22s ease, opacity .15s ease;
+  transform-origin: center; flex-shrink: 0;
+}
+.nav-burger:hover { background: rgba(255,255,255,.12) !important; }
+body.nav-open .nav-burger span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+body.nav-open .nav-burger span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+body.nav-open .nav-burger span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* ---- MOBILE NAV DRAWER ---- */
+.nav-drawer {
+  display: none;
+  width: 100%;
+  flex-direction: column;
+  gap: .2rem;
+  padding: .4rem 0 .6rem;
+  border-top: 1px solid rgba(255,255,255,.1);
+}
+body.nav-open .nav-drawer { display: flex; }
+
+.nav-drawer a, .nav-drawer .link {
+  font-family: var(--font); font-weight: 700; font-size: 1rem;
+  text-transform: uppercase; letter-spacing: .08em;
+  color: rgba(255,255,255,.65);
+  padding: .65rem .75rem; border-radius: 7px;
+  white-space: nowrap; display: block; width: 100%;
+  background: none; border: none; text-align: left; cursor: pointer;
+  transition: color .12s, background .12s;
+}
+.nav-drawer a:hover, .nav-drawer .link:hover {
+  color: #fff; background: rgba(255,255,255,.09); text-decoration: none;
+}
+.nav-drawer a.active {
+  background: var(--nav-active-bg);
+  color: var(--nav-active-color);
+}
+
 button.link {
-  background: none; border: none; cursor: pointer;
+  background: none; border: none; cursor: pointer; min-height: unset;
   font-family: var(--font); font-weight: 700; font-size: .9rem;
   text-transform: uppercase; letter-spacing: .07em;
   color: rgba(255,255,255,0.55); padding: .38rem .65rem; border-radius: 6px;
@@ -475,24 +528,22 @@ ul.fixtures { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; 
    MOBILE — primary target: 375–430px (iPhone)
 ============================================================ */
 
-/* Topbar: shrink logo + tighten nav links on small screens */
 @media(max-width: 480px) {
+  /* Topbar: switch to burger layout */
   .topbar {
     padding-left: .6rem;
     padding-right: .6rem;
     gap: .15rem;
   }
   .brand-logo-img { height: 36px; }
-  .topbar nav { gap: .05rem; }
-  .topbar nav a, .topbar nav .link {
-    font-size: .78rem;
-    padding: .28rem .42rem;
-    letter-spacing: .04em;
-  }
+  /* Hide desktop nav links, show burger */
+  .topbar-nav { display: none; }
+  .topbar-end { margin-left: auto; }
+  .nav-burger { display: flex; }
   .theme-toggle {
     padding: .22rem .42rem;
     font-size: .72rem;
-    margin-left: .2rem;
+    margin-left: 0;
   }
 
   /* Headings */

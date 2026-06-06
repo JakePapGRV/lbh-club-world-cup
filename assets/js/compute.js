@@ -8,6 +8,7 @@ import { TEAMS_PER_PLAYER } from './lib/teams.js?v=2';
 
 const DISPLAY_TZ = 'Australia/Sydney';
 const DATE_FMT = new Intl.DateTimeFormat('en-AU', { weekday: 'short', day: 'numeric', month: 'short', timeZone: DISPLAY_TZ });
+const SHORT_DATE_FMT = new Intl.DateTimeFormat('en-AU', { day: '2-digit', month: '2-digit', timeZone: DISPLAY_TZ });
 const TIME_FMT = new Intl.DateTimeFormat('en-AU', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: DISPLAY_TZ });
 const STAGE_LABEL = { group: 'Group', R32: 'Round of 32', R16: 'Round of 16', QF: 'Quarter-final', SF: 'Semi-final', third: '3rd place', final: 'Final' };
 
@@ -109,6 +110,7 @@ function decorateFixture(f, teamById, ownerNameByTeam) {
     away_is_winner: f.winner_team_id != null && f.winner_team_id === f.away_team_id,
     time_label: d ? TIME_FMT.format(d) : '',
     date_label: d ? DATE_FMT.format(d) : 'Date TBC',
+    short_date_label: d ? SHORT_DATE_FMT.format(d) : '',
     stage_label: f.stage === 'group' ? `Group ${f.grp}` : (STAGE_LABEL[f.stage] || f.stage),
   };
 }
