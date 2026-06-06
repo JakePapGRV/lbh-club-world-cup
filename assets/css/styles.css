@@ -726,10 +726,8 @@ ul.fixtures { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; 
   font-family: var(--font); font-weight: 900; font-size: 1.15rem;
   text-transform: uppercase; color: #202123; letter-spacing: .02em;
   flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: nowrap; text-align: center;
 }
-.fxc-match .fxc-team:first-child { text-align: right; }
-.fxc-match .fxc-team:last-child  { text-align: left; }
 .fxc-sep {
   font-family: var(--font); font-weight: 900; font-size: 1.1rem;
   color: #202123; min-width: 2.4rem; text-align: center;
