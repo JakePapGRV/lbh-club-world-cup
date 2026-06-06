@@ -91,46 +91,49 @@ npx http-server . -p 5173 -c-1
 Then open http://localhost:5173. With `config.js` blank it uses in-browser
 storage (great for a solo test); fill in Supabase to share.
 
-## Automatic score updates (GitHub Actions + SportMonks)
+## Automatic score updates (GitHub Actions + football-data.org)
 
 A scheduled GitHub Action ([`.github/workflows/sync-scores.yml`](.github/workflows/sync-scores.yml))
-polls the SportMonks API and writes results straight into Supabase — group
-scores, the advancing team in knockouts, and new knockout ties as the bracket is
-drawn. Manual entry on **Admin → Enter scores** still works and takes priority:
-the sync never overwrites a result the API hasn't finished yet.
+polls **football-data.org** (whose free tier covers the World Cup) and writes
+results straight into Supabase — group scores, the advancing team in knockouts,
+and new knockout ties as the bracket is drawn. Manual entry on **Admin → Enter
+scores** still works and takes priority: the sync never overwrites a result the
+API hasn't finished yet.
 
 **How fresh:** GitHub's cron can't fire more often than every 5 minutes, so each
 run polls in a loop every ~60 seconds for its 5-minute window. Back-to-back runs
 give near-continuous, ~1-minute-resolution updates, so a finished result lands in
-Supabase within ~1 minute of SportMonks marking it final — and the Ladder/Fixtures
-pages already refresh every minute, so the app updates on its own shortly after
-full time. (To poll less aggressively, widen the loop/cron in the workflow.)
+Supabase within ~1 minute of the provider marking it final — and the
+Ladder/Fixtures pages already refresh every minute, so the app updates on its own
+shortly after full time. (To poll less aggressively, widen the loop/cron in the
+workflow.)
 
 **One-time setup** — add two repository secrets (repo **Settings → Secrets and
 variables → Actions → New repository secret**):
 
 | Secret | Value |
 |---|---|
-| `SPORTMONKS_TOKEN` | Your SportMonks API token. |
-| `DATABASE_URL` | Your Supabase **Postgres connection string** — **not** the API URL. In Supabase, click the green **Connect** button (top of the dashboard), open the **Session pooler** option, and copy the URI. It looks like `postgresql://postgres.<ref>:[YOUR-PASSWORD]@aws-0-<region>.pooler.supabase.com:5432/postgres`. Replace `[YOUR-PASSWORD]` with your database password (reset it under Project Settings → Database if needed). Use the **Session pooler** (it's IPv4 — GitHub's runners can't reach the IPv6-only direct connection). |
+| `FOOTBALL_DATA_TOKEN` | A free API token from <https://www.football-data.org/client/register> — register and it's emailed to you. |
+| `DATABASE_URL` | Your Supabase **Postgres connection string** — **not** the API URL. In Supabase, click the green **Connect** button (top of the dashboard), open the **Session pooler** option, and copy the URI. It looks like `postgresql://postgres.<ref>:[YOUR-PASSWORD]@aws-0-<region>.pooler.supabase.com:5432/postgres`. Replace `[YOUR-PASSWORD]` with your database password (use a letters-and-numbers-only password to avoid URL-encoding issues; reset it via **Connect → Session pooler** / the database settings). Use the **Session pooler** (it's IPv4 — GitHub's runners can't reach the IPv6-only direct connection). |
 
 That's it — the workflow runs on schedule, and you can trigger it any time from
 the repo's **Actions → Sync World Cup scores → Run workflow** button. Watch a run's
 log for a one-line summary (`fetched=… updated=… inserted=…`).
 
-> ⚠️ **SportMonks plan:** the *free* tier does **not** include the FIFA World
-> Cup. If your plan doesn't cover it the log prints `fetched=0` and nothing syncs
-> — that's the signal you need a plan that includes the tournament. Manual entry
-> remains the fallback either way.
+> ⚠️ If the log prints `fetched=0`, the provider returned no World Cup matches —
+> for football-data.org that usually means the fixtures aren't published yet (they
+> appear closer to kickoff) or the token is invalid. Manual entry remains the
+> fallback. (SportMonks is also supported — set `SCORE_PROVIDER=sportmonks` and a
+> `SPORTMONKS_TOKEN` secret — but its free tier does **not** include the World Cup.)
 
-The first sync also links SportMonks' team/fixture ids onto the seeded rows
+The first sync also links the provider's team/fixture ids onto the seeded rows
 (matched by FIFA code/name). If a team can't be matched, the log names it — add
 the spelling to the table in [`src/data/fifaRankings.js`](src/data/fifaRankings.js).
 
 To run it by hand locally:
 
 ```bash
-DATABASE_URL="postgres://…supabase…" SPORTMONKS_TOKEN="…" npm run sync
+DATABASE_URL="postgres://…supabase…" FOOTBALL_DATA_TOKEN="…" npm run sync
 ```
 
 ## Project layout

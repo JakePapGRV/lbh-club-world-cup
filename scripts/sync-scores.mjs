@@ -30,12 +30,12 @@ try {
   );
 
   if (r.fetched === 0) {
-    console.warn(
-      '⚠ The provider returned 0 World Cup fixtures. Either the plan does not cover ' +
-        'the FIFA World Cup, or the league id is wrong ' +
-        `(SPORTMONKS_WC_LEAGUE_ID, currently ${process.env.SPORTMONKS_WC_LEAGUE_ID || 26618}).`
-    );
+    console.warn(`⚠ ${r.provider} returned 0 World Cup matches.`);
     if (name === 'sportmonks') {
+      console.warn(
+        `  Likely the plan doesn't cover the World Cup, or SPORTMONKS_WC_LEAGUE_ID ` +
+          `(currently ${process.env.SPORTMONKS_WC_LEAGUE_ID || 26618}) is wrong.`
+      );
       try {
         const leagues = await findWorldCupLeagues(process.env.SPORTMONKS_TOKEN);
         if (!leagues.length) {
@@ -49,6 +49,12 @@ try {
       } catch (e) {
         console.warn(`  League lookup failed: ${e.message}`);
       }
+    } else if (name === 'football-data') {
+      console.warn(
+        '  The 2026 World Cup matches may not be published on football-data.org yet ' +
+          '(they often appear closer to kickoff). If they never show up, double-check ' +
+          'that FOOTBALL_DATA_TOKEN is valid.'
+      );
     }
   }
   if (r.unmatched.length) {
