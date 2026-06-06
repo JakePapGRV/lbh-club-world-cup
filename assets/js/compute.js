@@ -2,9 +2,9 @@
 // arrays returned by store.loadAll() instead of SQL. Reuses the same tested
 // rules engine (lib/scoring.js, lib/draft.js).
 
-import { buildPickSequence } from './lib/draft.js';
-import { computeLadder, DEFAULT_STAGE_POINTS } from './lib/scoring.js';
-import { TEAMS_PER_PLAYER } from './lib/teams.js';
+import { buildPickSequence } from './lib/draft.js?v=2';
+import { computeLadder, DEFAULT_STAGE_POINTS } from './lib/scoring.js?v=2';
+import { TEAMS_PER_PLAYER } from './lib/teams.js?v=2';
 
 const DISPLAY_TZ = 'Australia/Sydney';
 const DATE_FMT = new Intl.DateTimeFormat('en-AU', { weekday: 'short', day: 'numeric', month: 'short', timeZone: DISPLAY_TZ });
