@@ -51,11 +51,7 @@ function headerHtml(route) {
   return `
   <header class="topbar">
     <a class="brand" href="#/">
-      <img class="brand-logo-img" src="assets/img/logo.svg" alt="" width="80" height="36" />
-      <span class="brand-text">
-        <span class="brand-line">LBH Club</span>
-        <span class="brand-line">World Cup Draft</span>
-      </span>
+      <img class="brand-logo-img" src="assets/img/logo.svg" alt="LBH Club World Cup Draft" width="80" height="36" />
     </a>
     <nav class="topbar-nav">${links}${adminArea}</nav>
     <div class="topbar-end">
