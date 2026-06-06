@@ -117,13 +117,7 @@ a:hover { text-decoration: underline; }
   position: absolute; top: 4.5rem;
   display: flex; align-items: center; gap: .8rem;
 }
-.splash-logo { width: 54px; height: auto; }
-.splash-title {
-  font-family: var(--font); font-weight: 800;
-  font-size: 1.2rem; line-height: 1.2;
-  letter-spacing: .07em; color: #8bffec;
-  text-transform: uppercase;
-}
+.splash-logo { width: 160px; height: auto; }
 /* Spinning gradient ring around the photo */
 .splash-spinner {
   width: 96px; height: 96px; border-radius: 50%;
@@ -137,11 +131,7 @@ a:hover { text-decoration: underline; }
   background: #111;
   animation: splash-counter 1.2s linear infinite;
 }
-.splash-spinner-img {
-  width: 100%; height: 100%; object-fit: cover; display: block;
-  transform: scale(3.5);
-  transform-origin: center bottom;
-}
+.splash-spinner-img { width: 100%; height: 100%; object-fit: cover; display: block; }
 @keyframes splash-spin    { to { transform: rotate(360deg);  } }
 @keyframes splash-counter { to { transform: rotate(-360deg); } }
 /* Loading bar fills left to right */
