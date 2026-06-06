@@ -36,18 +36,22 @@ export function renderFixtures(groups) {
   <h1>Fixtures</h1>
   ${groups.map((g) => `
     <section class="fxgroup">
-      <h2>${esc(g.title)}</h2>
       <ul class="fixtures">
-        ${g.fixtures.map((f) => `
+        ${g.fixtures.map((f) => {
+          const when = [f.date_label, f.time_label].filter(Boolean).join(' ');
+          const owners = (f.home_owner || f.away_owner)
+            ? `${f.home_owner || '—'} v ${f.away_owner || '—'}` : '';
+          return `
           <li id="fx-${f.id}" class="fixture ${f.status === 'finished' ? 'played' : ''}">
-            <span class="fx-date">${esc(f.stage_label)}</span>
+            <span class="fx-when">${esc(when || 'TBC')}</span>
             <div class="fx-teams">
               <span class="fx-home">${esc(f.home_name || 'TBD')}</span>
               <span class="fx-sep">${f.status === 'finished' ? `${f.home_score}&ndash;${f.away_score}` : 'v'}</span>
               <span class="fx-away">${esc(f.away_name || 'TBD')}</span>
             </div>
-            <span class="fx-time">${esc(f.time_label)}</span>
-          </li>`).join('')}
+            <span class="fx-owners">${esc(owners)}</span>
+          </li>`;
+        }).join('')}
       </ul>
     </section>`).join('')}
   <div class="view-btn-wrap"><a class="view-btn" href="#/">View Ladder</a></div>`;
