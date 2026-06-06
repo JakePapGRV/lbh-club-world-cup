@@ -40,8 +40,9 @@ export function renderFixtures(groups) {
       <ul class="fixtures">
         ${g.fixtures.map((f) => {
           const when = [f.short_date_label, f.time_label].filter(Boolean).join(' ');
+          const shortName = (n) => n ? (n.length > 5 ? n.slice(0, 4) + '..' : n) : '—';
           const owners = (f.home_owner || f.away_owner)
-            ? `${f.home_owner || '—'} v ${f.away_owner || '—'}` : '';
+            ? `${shortName(f.home_owner)} v ${shortName(f.away_owner)}` : '';
           return `
           <li id="fx-${f.id}" class="fixture ${f.status === 'finished' ? 'played' : ''}">
             <span class="fx-when">${esc(when || 'TBC')}</span>
