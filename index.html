@@ -22,7 +22,7 @@
   <!-- Cache-bust: redirect to a versioned URL so stale cached pages reload once -->
   <script>
     (function () {
-      var V = '6';
+      var V = '7';
       try {
         if (localStorage.getItem('_lbhv') !== V) {
           localStorage.setItem('_lbhv', V);
@@ -37,6 +37,6 @@
 </head>
 <body data-route="ladder" data-theme="dark">
   <div id="root"><main class="container"><p class="hint">Loading…</p></main></div>
-  <script type="module" src="assets/js/app.js?v=5"></script>
+  <script type="module" src="assets/js/app.js?v=6"></script>
 </body>
 </html>
