@@ -191,7 +191,7 @@ export function renderTips(ladder, view, myId) {
 
   return `
   <h1>Tipping</h1>
-  <p class="hint">Tip the winner of every match — 1 point for each correct call. Group games can be a draw; knockout ties go to whoever advances. Tips lock at kick-off, and you can't see the others' picks until then.</p>
+  <p class="hint">Tip the winner of every match — 1 point for each correct call. Group games can be a draw; knockout ties go to whoever advances. Tips lock 1 hour before kick-off, and you can't see the others' picks until then.</p>
 
   ${tipLadder}
 

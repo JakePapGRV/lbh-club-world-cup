@@ -17,6 +17,9 @@ const ownershipMap = (picks) => Object.fromEntries(picks.map((p) => [p.team_id, 
 
 const KO_STAGES = ['R32', 'R16', 'QF', 'SF', 'third', 'final'];
 
+// Tips lock — and everyone's picks are then revealed — this long before kickoff.
+const TIP_LOCK_MS = 60 * 60 * 1000; // 1 hour
+
 // Returns a predicate (teamId) => still in the tournament.
 // A team is out if it lost a finished knockout match, or — once the knockout
 // bracket exists — it never made the bracket (i.e. it was eliminated when the
@@ -285,7 +288,7 @@ export function getTipsView(data, myId) {
   const decorate = (f) => {
     const d = decorateFixture(f, teamById, owners);
     const ko = f.kickoff ? Date.parse(f.kickoff) : null;
-    const locked = f.status === 'finished' || (ko != null && ko <= now);
+    const locked = f.status === 'finished' || (ko != null && ko - TIP_LOCK_MS <= now);
     const fixtureTips = tipsByFixture[f.id] || [];
     const myTip = myId ? fixtureTips.find((t) => t.player_id === myId) : null;
     const outcome = outcomeOf(f);
