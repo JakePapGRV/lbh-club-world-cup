@@ -1,9 +1,9 @@
 // SPA router + event wiring. Hash-based routing so it works under any GitHub
 // Pages base path with no server rewrites.
 
-import { store } from './store.js';
-import { getLadder, getFixturesView, getBracket, getDraftState } from './compute.js';
-import { renderLadder, renderFixtures, renderBracket, renderDraft, renderAdmin, renderLogin } from './views.js';
+import { store } from './store.js?v=2';
+import { getLadder, getFixturesView, getBracket, getDraftState } from './compute.js?v=2';
+import { renderLadder, renderFixtures, renderBracket, renderDraft, renderAdmin, renderLogin } from './views.js?v=2';
 
 const root = document.getElementById('root');
 const PASSWORD = (window.LBH_CONFIG || {}).ADMIN_PASSWORD || 'admin';

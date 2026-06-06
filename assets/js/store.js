@@ -3,10 +3,10 @@
 //   • localStorage (fallback) — this browser only, for a solo test run.
 // Both expose the same methods so the rest of the app doesn't care which is live.
 
-import { supabaseEnabled, sbSelect, sbInsert, sbUpdate, sbDelete } from './supabase.js';
-import { TEAMS, DEFAULT_PLAYERS, TEAMS_PER_PLAYER } from './lib/teams.js';
-import { buildPickSequence, shuffle } from './lib/draft.js';
-import { generateGroupFixtures } from './lib/fixtures.js';
+import { supabaseEnabled, sbSelect, sbInsert, sbUpdate, sbDelete } from './supabase.js?v=2';
+import { TEAMS, DEFAULT_PLAYERS, TEAMS_PER_PLAYER } from './lib/teams.js?v=2';
+import { buildPickSequence, shuffle } from './lib/draft.js?v=2';
+import { generateGroupFixtures } from './lib/fixtures.js?v=2';
 
 const nowIso = () => new Date().toISOString();
 
