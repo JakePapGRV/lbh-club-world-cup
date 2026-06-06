@@ -6,21 +6,27 @@ const esc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({ '&':
 
 // ---------------------------------------------------------------- Ladder
 export function renderLadder(ladder) {
+  const initials = (name) => name ? name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase() : '?';
   return `
   <h1>Ladder</h1>
-  <table class="ladder">
-    <thead><tr><th>#</th><th>Player</th><th>Teams left</th><th>Points</th></tr></thead>
-    <tbody>
-      ${ladder.map((p, i) => `
-        <tr class="${i === 0 ? 'leader' : ''}">
-          <td class="rank">${i + 1}</td>
-          <td>${esc(p.name)}</td>
-          <td>${p.teamCount}</td>
-          <td class="pts">${p.points}</td>
-        </tr>`).join('')}
-    </tbody>
-  </table>
-  <p class="hint">“Teams left” counts only your drafted nations still in the tournament — it drops as teams are knocked out (including those eliminated when the group stage ends). Points update as results are entered. Group win = 1, draw = 0.5. Knockouts: R32 = 1, R16 = 2, QF = 3, SF = 4, Final = 5.</p>`;
+  <div class=”ladder-header”>
+    <span class=”lh-rank”>#</span>
+    <span class=”lh-avatar”></span>
+    <span class=”lh-name”>Player</span>
+    <span class=”lh-teams”>Teams</span>
+    <span class=”lh-pts”>Pts</span>
+  </div>
+  <div class=”ladder-list”>
+    ${ladder.map((p, i) => `
+      <div class=”ladder-row ${i === 0 ? 'leader' : ''}”>
+        <span class=”ladder-rank”>${i + 1}</span>
+        <span class=”ladder-avatar”>${initials(p.name)}</span>
+        <span class=”ladder-name”>${esc(p.name)}</span>
+        <span class=”ladder-teams”>${p.teamCount}</span>
+        <span class=”ladder-pts”>${p.points}</span>
+      </div>`).join('')}
+  </div>
+  <p class=”hint” style=”margin-top:1rem”>”Teams left” counts only your drafted nations still in the tournament. Points: group win = 1, draw = 0.5. Knockouts: R32 = 1, R16 = 2, QF = 3, SF = 4, Final = 5.</p>`;
 }
 
 // -------------------------------------------------------------- Fixtures
@@ -28,30 +34,23 @@ export function renderFixtures(groups) {
   if (!groups.length) return `<h1>Fixtures</h1><p class="hint">No fixtures yet.</p>`;
   return `
   <h1>Fixtures</h1>
-  <p class="hint">In kickoff order. Each match shows the two nations and, once the draft is done, which player owns them. Times shown in AEST.</p>
   ${groups.map((g) => `
     <section class="fxgroup">
       <h2>${esc(g.title)}</h2>
       <ul class="fixtures">
         ${g.fixtures.map((f) => `
           <li id="fx-${f.id}" class="fixture ${f.status === 'finished' ? 'played' : ''}">
-            <div class="fxtop">
-              <span class="fxtime">${esc(f.time_label)}</span>
-              <span class="fxtag">${esc(f.stage_label)}</span>
+            <span class="fx-date">${esc(g.title)}</span>
+            <div class="fx-teams">
+              <span class="fx-home">${esc(f.home_name || 'TBD')}</span>
+              <span class="fx-sep">${f.status === 'finished' ? `${f.home_score}&ndash;${f.away_score}` : 'v'}</span>
+              <span class="fx-away">${esc(f.away_name || 'TBD')}</span>
             </div>
-            <div class="teams">
-              <span class="team home">${esc(f.home_name || 'TBD')}</span>
-              <span class="score">${f.status === 'finished' ? `${f.home_score}&ndash;${f.away_score}` : 'v'}</span>
-              <span class="team away">${esc(f.away_name || 'TBD')}</span>
-            </div>
-            <div class="owners">
-              <span class="${f.home_owner ? 'owned' : 'unowned'}">${esc(f.home_owner || '—')}</span>
-              <span class="vs">vs</span>
-              <span class="${f.away_owner ? 'owned' : 'unowned'}">${esc(f.away_owner || '—')}</span>
-            </div>
+            <span class="fx-time">${esc(f.time_label)}</span>
           </li>`).join('')}
       </ul>
-    </section>`).join('')}`;
+    </section>`).join('')}
+  <div class="view-btn-wrap"><a class="view-btn" href="#/">View Ladder</a></div>`;
 }
 
 // --------------------------------------------------------------- Bracket

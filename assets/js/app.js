@@ -11,6 +11,12 @@ const esc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({ '&':
 
 let isAdmin = localStorage.getItem('lbh_admin') === '1';
 let myId = Number(localStorage.getItem('lbh_me')) || null; // which player THIS device is
+
+function applyTheme(dark) {
+  document.body.dataset.theme = dark ? 'dark' : 'light';
+  localStorage.setItem('lbh_theme', dark ? 'dark' : 'light');
+}
+applyTheme(localStorage.getItem('lbh_theme') !== 'light');
 let draftMyTurn = false;   // set each draft render; pauses auto-refresh while you're picking
 let flash = null;          // {notice} | {problem} consumed by the next admin render
 let loginError = null;
@@ -41,17 +47,23 @@ function headerHtml(route) {
   const adminArea = isAdmin
     ? `<a href="#/admin" class="${ak === 'admin' ? 'active' : ''}">Admin</a><button class="link" data-action="logout">Logout</button>`
     : `<a href="#/login" class="${ak === 'admin' ? 'active' : ''}">Admin</a>`;
+  const isDark = document.body.dataset.theme !== 'light';
   return `
   <header class="topbar">
     <a class="brand" href="#/">
-      <img class="brand-logo" src="assets/img/logo.svg" alt="" width="38" height="45" />
-      <span class="brand-text"><span class="brand-main">LBH Club</span><span class="brand-sub">World Cup Draft</span></span>
+      <img class="brand-logo-img" src="assets/img/logo.svg" alt="" width="38" height="45" />
+      <span class="brand-text">
+        <span class="brand-line">LBH Club</span>
+        <span class="brand-line">World Cup Draft</span>
+      </span>
     </a>
-    <nav>${links}${adminArea}</nav>
+    <nav>${links}${adminArea}<button class="theme-toggle" data-action="toggle-theme">${isDark ? '☀ Light' : '☾ Dark'}</button></nav>
   </header>`;
 }
 
 function paint(route, body) {
+  const routeKey = activeKey(route);
+  document.body.dataset.route = routeKey || 'ladder';
   root.innerHTML = headerHtml(route) + `<main class="container" id="app">${body}</main>`;
 }
 
@@ -216,7 +228,10 @@ root.addEventListener('click', (e) => {
   const el = e.target.closest('[data-action]');
   if (!el || el.tagName === 'FORM') return;
   const action = el.dataset.action;
-  if (action === 'logout') {
+  if (action === 'toggle-theme') {
+    applyTheme(document.body.dataset.theme !== 'dark');
+    render();
+  } else if (action === 'logout') {
     isAdmin = false;
     localStorage.removeItem('lbh_admin');
     location.hash = '#/';
