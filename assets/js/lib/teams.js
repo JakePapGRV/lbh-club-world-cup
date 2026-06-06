@@ -2,9 +2,8 @@
 // draw (Washington D.C., 5 Dec 2025) and each team's FIFA world ranking
 // (FIFA/ESPN, April 2026 — the last update before the tournament).
 //
-// The draft lists teams best-ranked first. Group fixtures are generated from
-// these real groups. (Kickoff times in the seed are still placeholders until
-// the API import provides the official schedule.)
+// The draft lists teams best-ranked first. Group fixtures (real pairings, dates
+// and kick-off times) live in schedule2026.js and reference these teams by code.
 //
 // Listed in ranking order.
 const QUALIFIED = [

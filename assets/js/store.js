@@ -6,31 +6,18 @@
 import { supabaseEnabled, sbSelect, sbInsert, sbUpdate, sbDelete } from './supabase.js?v=2';
 import { TEAMS, DEFAULT_PLAYERS, TEAMS_PER_PLAYER } from './lib/teams.js?v=2';
 import { buildPickSequence, shuffle } from './lib/draft.js?v=2';
-import { generateGroupFixtures } from './lib/fixtures.js?v=2';
+import { buildGroupFixtures } from './lib/schedule2026.js?v=2';
 
 const nowIso = () => new Date().toISOString();
 
-// ---- shared seed (matches src/db/seed.js so local + Supabase are identical) ----
+// ---- shared seed (matches supabase-schema.sql so local + Supabase are identical) ----
+// Uses the REAL 2026 group-stage schedule (buildGroupFixtures sorts chronologically).
 function seedGroupFixtures() {
-  const teamRows = TEAMS.map((t, i) => ({ id: i + 1, grp: t.grp }));
-  const fixtures = generateGroupFixtures(teamRows).sort(
-    (a, b) => a.matchday - b.matchday || a.grp.localeCompare(b.grp)
-  );
-  const DAY_MS = 86400000;
-  const MATCHDAY_START = { 1: Date.UTC(2026, 5, 11), 2: Date.UTC(2026, 5, 17), 3: Date.UTC(2026, 5, 23) };
-  const SLOT_HOURS = [16, 19, 22, 25];
-  const per = { 1: 0, 2: 0, 3: 0 };
-  return fixtures.map((fx, i) => {
-    const idx = per[fx.matchday]++;
-    const kickoff = new Date(
-      MATCHDAY_START[fx.matchday] + Math.floor(idx / 4) * DAY_MS + SLOT_HOURS[idx % 4] * 3600000
-    );
-    return {
-      id: i + 1, api_id: null, stage: 'group', grp: fx.grp, matchday: fx.matchday,
-      kickoff: kickoff.toISOString(), home_team_id: fx.homeTeamId, away_team_id: fx.awayTeamId,
-      home_score: null, away_score: null, winner_team_id: null, status: 'scheduled',
-    };
-  });
+  return buildGroupFixtures(TEAMS).map((fx, i) => ({
+    id: i + 1, api_id: null, stage: 'group', grp: fx.grp, matchday: fx.matchday,
+    kickoff: fx.kickoff, home_team_id: fx.homeTeamId, away_team_id: fx.awayTeamId,
+    home_score: null, away_score: null, winner_team_id: null, status: 'scheduled',
+  }));
 }
 
 // =========================================================================

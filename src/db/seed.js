@@ -1,7 +1,7 @@
 import { query } from './index.js';
 import { ensureSchema } from './setup.js';
 import { TEAMS, DEFAULT_PLAYERS } from '../data/teams.js';
-import { generateGroupFixtures } from '../lib/fixtures.js';
+import { buildGroupFixtures } from '../data/schedule2026.js';
 
 /** True if there are no teams loaded yet. */
 async function isEmpty() {
@@ -29,41 +29,25 @@ export async function seed() {
     await query('INSERT INTO players (name) VALUES ($1)', [name]);
   }
 
-  // Teams.
+  // Teams. Keep each team's returned id paired with its code so fixtures can be
+  // resolved by code (ids come from the SERIAL sequence, not necessarily 1..48).
   const teamRows = [];
   for (const t of TEAMS) {
     const { rows } = await query(
-      'INSERT INTO teams (name, code, grp, ranking) VALUES ($1, $2, $3, $4) RETURNING id, grp',
+      'INSERT INTO teams (name, code, grp, ranking) VALUES ($1, $2, $3, $4) RETURNING id',
       [t.name, t.code, t.grp, t.ranking]
     );
-    teamRows.push(rows[0]);
+    teamRows.push({ id: rows[0].id, code: t.code });
   }
 
-  // Group fixtures (round-robin), spread across the real group-stage window
-  // (11–27 Jun 2026) by matchday, four kickoffs a day. UTC slots are chosen so
-  // the AEST display lands on realistic morning viewing times (a North-American
-  // evening kickoff is an Australian morning). These are placeholders — the API
-  // import replaces them with the official schedule.
-  const fixtures = generateGroupFixtures(teamRows).sort(
-    (a, b) => a.matchday - b.matchday || a.grp.localeCompare(b.grp)
-  );
-  const DAY_MS = 86400000;
-  const MATCHDAY_START = {
-    1: Date.UTC(2026, 5, 11), // 11 Jun
-    2: Date.UTC(2026, 5, 17), // 17 Jun
-    3: Date.UTC(2026, 5, 23), // 23 Jun
-  };
-  const SLOT_HOURS = [16, 19, 22, 25]; // UTC → ~02:00, 05:00, 08:00, 11:00 AEST
-  const perMatchday = { 1: 0, 2: 0, 3: 0 };
+  // Group fixtures: the REAL 2026 schedule (pairings, dates, kick-off times),
+  // already sorted chronologically by buildGroupFixtures.
+  const fixtures = buildGroupFixtures(teamRows);
   for (const fx of fixtures) {
-    const idx = perMatchday[fx.matchday]++;
-    const kickoff = new Date(
-      MATCHDAY_START[fx.matchday] + Math.floor(idx / 4) * DAY_MS + SLOT_HOURS[idx % 4] * 3600000
-    );
     await query(
       `INSERT INTO fixtures (stage, grp, matchday, kickoff, home_team_id, away_team_id)
        VALUES ($1, $2, $3, $4, $5, $6)`,
-      [fx.stage, fx.grp, fx.matchday, kickoff.toISOString(), fx.homeTeamId, fx.awayTeamId]
+      [fx.stage, fx.grp, fx.matchday, fx.kickoff, fx.homeTeamId, fx.awayTeamId]
     );
   }
 

@@ -5,32 +5,14 @@ import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { TEAMS, DEFAULT_PLAYERS } from '../src/data/teams.js';
-import { generateGroupFixtures } from '../src/lib/fixtures.js';
+import { buildGroupFixtures } from '../src/data/schedule2026.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // Teams get ids 1..48 in ranking order (same order the original seed inserted them).
-const teamRows = TEAMS.map((t, i) => ({ id: i + 1, grp: t.grp }));
-
-// Group fixtures + placeholder kickoffs — identical logic to src/db/seed.js.
-const fixtures = generateGroupFixtures(teamRows).sort(
-  (a, b) => a.matchday - b.matchday || a.grp.localeCompare(b.grp)
-);
-const DAY_MS = 86400000;
-const MATCHDAY_START = {
-  1: Date.UTC(2026, 5, 11),
-  2: Date.UTC(2026, 5, 17),
-  3: Date.UTC(2026, 5, 23),
-};
-const SLOT_HOURS = [16, 19, 22, 25];
-const perMatchday = { 1: 0, 2: 0, 3: 0 };
-const fixtureRows = fixtures.map((fx, i) => {
-  const idx = perMatchday[fx.matchday]++;
-  const kickoff = new Date(
-    MATCHDAY_START[fx.matchday] + Math.floor(idx / 4) * DAY_MS + SLOT_HOURS[idx % 4] * 3600000
-  );
-  return { id: i + 1, ...fx, kickoff: kickoff.toISOString() };
-});
+// Group fixtures use the REAL 2026 schedule (pairings, dates, kick-off times),
+// already sorted chronologically by buildGroupFixtures. Ids 1..72 follow kickoff order.
+const fixtureRows = buildGroupFixtures(TEAMS).map((fx, i) => ({ id: i + 1, ...fx }));
 
 const esc = (s) => (s == null ? 'NULL' : `'${String(s).replace(/'/g, "''")}'`);
 
@@ -146,3 +128,47 @@ lines.push('');
 
 writeFileSync(join(__dirname, '..', 'supabase-schema.sql'), lines.join('\n'));
 console.log(`Wrote supabase-schema.sql (${TEAMS.length} teams, ${DEFAULT_PLAYERS.length} players, ${fixtureRows.length} fixtures).`);
+
+// ---------------------------------------------------------------------------
+// Non-destructive fixtures-only migration.
+// Use this (NOT the full schema) to correct the schedule on a live database
+// that already has a draft: it replaces only the group fixtures and leaves
+// teams, players, picks, nominations and settings untouched.
+// ---------------------------------------------------------------------------
+const fix = [];
+fix.push(`-- LBH Club — World Cup Draft : fix group fixtures (NON-DESTRUCTIVE).
+-- Paste this whole file into the Supabase SQL Editor and run it once.
+--
+-- It replaces ONLY the group-stage fixtures with the real 2026 schedule.
+-- Your teams, players, PICKS (the completed draft), nominations and settings
+-- are left completely untouched. Knockout fixtures (if any have been added
+-- later) are also preserved.
+
+begin;
+
+-- Out with the old placeholder group fixtures (nominations cascade, but there
+-- are none pre-tournament; picks reference teams, not fixtures, so are safe).
+delete from fixtures where stage = 'group';
+
+-- In with the 72 real group fixtures (ids 1..${fixtureRows.length}, chronological).`);
+fix.push(
+  `insert into fixtures (id, stage, grp, matchday, kickoff, home_team_id, away_team_id) values`
+);
+fix.push(
+  fixtureRows
+    .map(
+      (f) =>
+        `  (${f.id}, 'group', ${esc(f.grp)}, ${f.matchday}, ${esc(f.kickoff)}, ${f.homeTeamId}, ${f.awayTeamId})`
+    )
+    .join(',\n') + ';'
+);
+fix.push(`
+-- Keep the identity counter ahead of the highest fixture id.
+select setval(pg_get_serial_sequence('fixtures', 'id'),
+  greatest(${fixtureRows.length}, (select coalesce(max(id), 0) from fixtures)));
+
+commit;
+`);
+
+writeFileSync(join(__dirname, '..', 'supabase-fix-fixtures.sql'), fix.join('\n'));
+console.log(`Wrote supabase-fix-fixtures.sql (non-destructive: ${fixtureRows.length} group fixtures, picks/draft preserved).`);
