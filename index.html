@@ -4,6 +4,10 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#111111" />
+  <!-- Force browsers to always revalidate this page -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <title>LBH Club · World Cup Draft</title>
   <link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg" />
   <link rel="manifest" href="manifest.webmanifest" />
@@ -14,11 +18,25 @@
   <meta name="apple-mobile-web-app-title" content="LBH Draft" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="assets/css/styles.css?v=4" />
+  <link rel="stylesheet" href="assets/css/styles.css?v=5" />
+  <!-- Cache-bust: redirect to a versioned URL so stale cached pages reload once -->
+  <script>
+    (function () {
+      var V = '5';
+      try {
+        if (localStorage.getItem('_lbhv') !== V) {
+          localStorage.setItem('_lbhv', V);
+          if (location.search.indexOf('_lbhv=') === -1) {
+            location.replace(location.pathname + '?_lbhv=' + V + location.hash);
+          }
+        }
+      } catch (e) {}
+    })();
+  </script>
   <script src="config.js"></script>
 </head>
 <body data-route="ladder" data-theme="dark">
   <div id="root"><main class="container"><p class="hint">Loading…</p></main></div>
-  <script type="module" src="assets/js/app.js?v=4"></script>
+  <script type="module" src="assets/js/app.js?v=5"></script>
 </body>
 </html>
