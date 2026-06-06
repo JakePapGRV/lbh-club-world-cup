@@ -107,6 +107,112 @@ export function renderBracket(b) {
     </div>` : ''}`;
 }
 
+// --------------------------------------------------------------- Tipping
+export function renderTips(ladder, view, myId) {
+  const initials = (name) => name ? name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase() : '?';
+  const players = [...ladder].sort((a, b) => a.id - b.id);
+  const me = players.find((p) => p.id === myId) || null;
+  const optLabel = (f, opt) => opt === 'draw' ? 'Draw'
+    : opt === 'home' ? (f.home_code || f.home_name || 'Home')
+    : (f.away_code || f.away_name || 'Away');
+
+  const tipLadder = `
+    <div class="ladder-header">
+      <span class="lh-rank">#</span>
+      <span class="lh-avatar"></span>
+      <span class="lh-name">Player</span>
+      <span class="lh-teams">Tipped</span>
+      <span class="lh-pts">Pts</span>
+    </div>
+    <div class="ladder-list">
+      ${ladder.map((p, i) => `
+        <div class="ladder-row ${i === 0 ? 'leader' : ''}">
+          <span class="ladder-rank">${i + 1}</span>
+          <span class="ladder-avatar">${initials(p.name)}</span>
+          <span class="ladder-name">${esc(p.name)}</span>
+          <span class="ladder-teams">${p.tipped}</span>
+          <span class="ladder-pts">${p.points}</span>
+        </div>`).join('')}
+    </div>`;
+
+  const identity = `
+    <div class="whoami card">
+      ${me
+        ? `<span class="who-label">You are</span> <span class="me">${esc(me.name)}</span> <button class="link" data-action="clear-me">change</button>`
+        : `<span class="who-label">Who are you?</span> <span class="who-btns">${players.map((p) => `<button data-action="set-me" data-player-id="${p.id}" data-player-name="${esc(p.name)}">${esc(p.name)}</button>`).join('')}</span>`}
+    </div>`;
+
+  // A match you can still tip on.
+  const tipCard = (f) => `
+    <div class="tip-match">
+      <div class="tip-match-head">
+        <span class="tip-when">${esc(f.time_label || 'TBC')}</span>
+        <span class="tip-stage">${esc(f.stage_label)}</span>
+      </div>
+      <div class="tip-row">
+        <span class="tip-side">${esc(f.home_name || 'TBD')}</span>
+        <span class="tip-vs">v</span>
+        <span class="tip-side">${esc(f.away_name || 'TBD')}</span>
+      </div>
+      <div class="tip-options">
+        ${f.tipOptions.map((opt) => `
+          <button class="tipbtn ${f.myPick === opt ? 'chosen' : ''}" data-action="tip" data-fixture-id="${f.id}" data-pick="${opt}">
+            ${esc(optLabel(f, opt))}
+          </button>`).join('')}
+      </div>
+      <div class="tip-count">${f.myPick ? 'Your tip is in' : 'Tap your tip'} · ${f.tippedCount}/${f.playerCount} in</div>
+    </div>`;
+
+  // A locked match — reveal everyone's picks.
+  const resultCard = (f) => {
+    const chipClass = (t) => t.pick == null ? 'none' : (f.outcome == null ? 'pending' : (t.correct ? 'hit' : 'miss'));
+    const chipSym = (t) => t.pick == null ? '' : (f.outcome == null ? '' : (t.correct ? '✓' : '✗'));
+    return `
+    <div class="tip-match locked ${f.status === 'finished' ? 'played' : ''}">
+      <div class="tip-match-head">
+        <span class="tip-when">${esc(f.time_label || '')}</span>
+        <span class="tip-stage">${esc(f.stage_label)}</span>
+      </div>
+      <div class="tip-row">
+        <span class="tip-side ${f.outcome === 'home' ? 'won' : ''}">${esc(f.home_name || 'TBD')}</span>
+        <span class="tip-vs">${f.status === 'finished' && f.home_score != null ? `${f.home_score}&ndash;${f.away_score}` : 'v'}</span>
+        <span class="tip-side ${f.outcome === 'away' ? 'won' : ''}">${esc(f.away_name || 'TBD')}</span>
+      </div>
+      <div class="tip-results">
+        ${f.allTips.map((t) => `
+          <span class="tip-chip ${chipClass(t)}">
+            <span class="tip-chip-name">${esc(t.name)}</span>
+            <span class="tip-chip-pick">${t.pick == null ? '—' : esc(optLabel(f, t.pick))} ${chipSym(t)}</span>
+          </span>`).join('')}
+      </div>
+    </div>`;
+  };
+
+  const groupSections = (groups, cardFn, emptyMsg) =>
+    groups.length
+      ? groups.map((g) => `
+        <section class="tip-group">
+          <h3 class="tip-date">${esc(g.title)}</h3>
+          ${g.fixtures.map(cardFn).join('')}
+        </section>`).join('')
+      : `<p class="hint">${esc(emptyMsg)}</p>`;
+
+  return `
+  <h1>Tipping</h1>
+  <p class="hint">Tip the winner of every match — 1 point for each correct call. Group games can be a draw; knockout ties go to whoever advances. Tips lock at kick-off, and you can't see the others' picks until then.</p>
+
+  ${tipLadder}
+  ${identity}
+
+  <h2 class="tip-section">To tip</h2>
+  ${!me ? `<p class="hint">Pick your name above, then tap a tip for each match.</p>` : ''}
+  ${groupSections(view.toTip, tipCard, "You're all caught up — no matches left to tip.")}
+
+  ${view.results.length ? `<h2 class="tip-section">Results &amp; locked</h2>${groupSections(view.results, resultCard, '')}` : ''}
+
+  <div class="view-btn-wrap"><a class="view-btn" href="#/">World Cup Draft →</a></div>`;
+}
+
 // ----------------------------------------------------------------- Draft
 export function renderDraft(s, isAdmin, myId) {
   const head = `
@@ -162,7 +268,7 @@ export function renderDraft(s, isAdmin, myId) {
     <div class="whoami card">
       ${me
         ? `<span class="who-label">You are</span> <span class="me">${esc(me.name)}</span> <button class="link" data-action="clear-me">change</button>`
-        : `<span class="who-label">Who are you?</span> <span class="who-btns">${s.players.map((p) => `<button data-action="set-me" data-player-id="${p.id}">${esc(p.name)}</button>`).join('')}</span>`}
+        : `<span class="who-label">Who are you?</span> <span class="who-btns">${s.players.map((p) => `<button data-action="set-me" data-player-id="${p.id}" data-player-name="${esc(p.name)}">${esc(p.name)}</button>`).join('')}</span>`}
     </div>` : '';
 
   const teamButtons = `
@@ -363,6 +469,20 @@ export function renderAdmin({ groups, players, teams, settings, mode, notice, pr
     <p class="hint">For knockout matches, also pick the team that advances (this is who gets the points, including penalty wins).</p>
     ${scoreRows}
   </section>`;
+}
+
+// -------------------------------------------------- Identity gate (login)
+export function renderIdentityGate(players) {
+  return `
+  <div class="idgate">
+    <img class="idgate-logo" src="assets/img/logo.svg" alt="LBH Club World Cup" />
+    <h1 class="idgate-title">Who are you?</h1>
+    <p class="hint idgate-hint">Tap your name to log in — we'll remember you on this device.</p>
+    <div class="idgate-btns">
+      ${players.map((p) => `<button class="idgate-btn" data-action="set-me" data-player-id="${p.id}" data-player-name="${esc(p.name)}">${esc(p.name)}</button>`).join('')}
+    </div>
+    <button class="link idgate-skip" data-action="skip-id">I'll pick later — just looking</button>
+  </div>`;
 }
 
 // ----------------------------------------------------------------- Login

@@ -3,7 +3,7 @@
 //   • localStorage (fallback) — this browser only, for a solo test run.
 // Both expose the same methods so the rest of the app doesn't care which is live.
 
-import { supabaseEnabled, sbSelect, sbInsert, sbUpdate, sbDelete } from './supabase.js?v=2';
+import { supabaseEnabled, sbSelect, sbInsert, sbUpsert, sbUpdate, sbDelete } from './supabase.js?v=17';
 import { TEAMS, DEFAULT_PLAYERS, TEAMS_PER_PLAYER } from './lib/teams.js?v=2';
 import { buildPickSequence, shuffle } from './lib/draft.js?v=2';
 import { buildGroupFixtures } from './lib/schedule2026.js?v=2';
@@ -32,6 +32,7 @@ function freshLocalState() {
     teams: TEAMS.map((t, i) => ({ id: i + 1, name: t.name, code: t.code, grp: t.grp, ranking: t.ranking, api_id: null })),
     fixtures: seedGroupFixtures(),
     picks: [],
+    tips: [],
     nextFixtureId: 1000,
   };
 }
@@ -50,7 +51,7 @@ const localBackend = {
   mode: 'local',
   async loadAll() {
     const s = lsLoad();
-    return { settings: s.settings, players: s.players, teams: s.teams, fixtures: s.fixtures, picks: s.picks };
+    return { settings: s.settings, players: s.players, teams: s.teams, fixtures: s.fixtures, picks: s.picks, tips: s.tips || [] };
   },
   async startDraft() {
     const s = lsLoad();
@@ -110,6 +111,14 @@ const localBackend = {
     s.settings.score_third_place = Boolean(on);
     lsSave(s);
   },
+  async saveTip(playerId, fixtureId, pick) {
+    const s = lsLoad();
+    s.tips = s.tips || [];
+    const existing = s.tips.find((t) => t.player_id === playerId && t.fixture_id === fixtureId);
+    if (existing) existing.pick = pick;
+    else s.tips.push({ id: s.tips.length + 1, player_id: playerId, fixture_id: fixtureId, pick });
+    lsSave(s);
+  },
 };
 
 // =========================================================================
@@ -118,14 +127,15 @@ const localBackend = {
 const supabaseBackend = {
   mode: 'supabase',
   async loadAll() {
-    const [settings, players, teams, fixtures, picks] = await Promise.all([
+    const [settings, players, teams, fixtures, picks, tips] = await Promise.all([
       sbSelect('settings', 'select=*&id=eq.1'),
       sbSelect('players', 'select=*&order=id.asc'),
       sbSelect('teams', 'select=*&order=ranking.asc.nullslast,name.asc'),
       sbSelect('fixtures', 'select=*&order=kickoff.asc.nullslast,id.asc'),
       sbSelect('picks', 'select=*&order=pick_number.asc'),
+      sbSelect('tips', 'select=*'),
     ]);
-    return { settings: (settings && settings[0]) || null, players: players || [], teams: teams || [], fixtures: fixtures || [], picks: picks || [] };
+    return { settings: (settings && settings[0]) || null, players: players || [], teams: teams || [], fixtures: fixtures || [], picks: picks || [], tips: tips || [] };
   },
   async startDraft() {
     const players = (await sbSelect('players', 'select=id&order=id.asc')) || [];
@@ -172,6 +182,9 @@ const supabaseBackend = {
   },
   async setThirdPlace(on) {
     await sbUpdate('settings', 'id=eq.1', { score_third_place: Boolean(on) });
+  },
+  async saveTip(playerId, fixtureId, pick) {
+    await sbUpsert('tips', { player_id: playerId, fixture_id: fixtureId, pick, updated_at: nowIso() }, 'player_id,fixture_id');
   },
 };
 

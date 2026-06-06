@@ -38,6 +38,17 @@ export async function sbInsert(table, rows) {
   return handle(res);
 }
 
+/** UPSERT rows, merging on a unique constraint (e.g. onConflict="player_id,fixture_id"). */
+export async function sbUpsert(table, rows, onConflict) {
+  const q = onConflict ? `?on_conflict=${onConflict}` : '';
+  const res = await fetch(`${REST}/${table}${q}`, {
+    method: 'POST',
+    headers: headers({ Prefer: 'resolution=merge-duplicates,return=representation' }),
+    body: JSON.stringify(rows),
+  });
+  return handle(res);
+}
+
 /** PATCH rows matching the PostgREST filter (e.g. "id=eq.1"). */
 export async function sbUpdate(table, filter, patch) {
   const res = await fetch(`${REST}/${table}?${filter}`, {

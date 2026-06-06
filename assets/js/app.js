@@ -1,9 +1,9 @@
 // SPA router + event wiring. Hash-based routing so it works under any GitHub
 // Pages base path with no server rewrites.
 
-import { store } from './store.js?v=5';
-import { getLadder, getFixturesView, getBracket, getDraftState, getTeamsView, getPlayerView, getTeamView } from './compute.js?v=16';
-import { renderLadder, renderFixtures, renderBracket, renderDraft, renderAdmin, renderLogin, renderTeamsOverview, renderPlayerView, renderTeamView } from './views.js?v=16';
+import { store } from './store.js?v=17';
+import { getLadder, getFixturesView, getBracket, getDraftState, getTeamsView, getPlayerView, getTeamView, getTipLadder, getTipsView } from './compute.js?v=17';
+import { renderLadder, renderFixtures, renderBracket, renderDraft, renderAdmin, renderLogin, renderTeamsOverview, renderPlayerView, renderTeamView, renderTips, renderIdentityGate } from './views.js?v=17';
 
 const root = document.getElementById('root');
 const PASSWORD = (window.LBH_CONFIG || {}).ADMIN_PASSWORD || 'admin';
@@ -11,6 +11,11 @@ const esc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({ '&':
 
 let isAdmin = localStorage.getItem('lbh_admin') === '1';
 let myId = Number(localStorage.getItem('lbh_me')) || null; // which player THIS device is
+let myName = localStorage.getItem('lbh_me_name') || null;  // cached for the header chip
+let skipId = sessionStorage.getItem('lbh_skip_id') === '1'; // "I'll pick later" — this visit only
+
+// Two-letter badge for the identity chip ("Papacostas" -> "PA").
+const initials = (n) => !n ? '?' : (n.includes(' ') ? n.split(' ').map((w) => w[0]).join('').slice(0, 2) : n.slice(0, 2)).toUpperCase();
 
 function applyTheme(dark) {
   document.body.dataset.theme = dark ? 'dark' : 'light';
@@ -27,6 +32,7 @@ const NAV = [
   { route: '/fixtures', label: 'Fixtures', key: 'fixtures' },
   { route: '/bracket', label: 'Bracket', key: 'bracket' },
   { route: '/draft', label: 'Teams', key: 'draft' },
+  { route: '/tips', label: 'Tipping', key: 'tips' },
 ];
 
 function currentRoute() {
@@ -37,6 +43,7 @@ function activeKey(route) {
   if (route.startsWith('/fixtures')) return 'fixtures';
   if (route.startsWith('/bracket')) return 'bracket';
   if (route.startsWith('/draft')) return 'draft';
+  if (route.startsWith('/tips')) return 'tips';
   if (route.startsWith('/admin') || route.startsWith('/login')) return 'admin';
   return '';
 }
@@ -48,6 +55,9 @@ function headerHtml(route) {
     ? `<a href="#/admin" class="${ak === 'admin' ? 'active' : ''}">Admin</a><button class="link" data-action="logout">Logout</button>`
     : `<a href="#/login" class="${ak === 'admin' ? 'active' : ''}">Admin</a>`;
   const isDark = document.body.dataset.theme !== 'light';
+  const idChip = myId
+    ? `<button class="id-chip" data-action="clear-me" title="You are ${esc(myName || '')} — tap to switch player">${initials(myName)}</button>`
+    : `<button class="id-chip ghost" data-action="signin" title="Pick your name">Sign in</button>`;
   return `
   <header class="topbar">
     <a class="brand" href="#/">
@@ -55,6 +65,7 @@ function headerHtml(route) {
     </a>
     <nav class="topbar-nav">${links}${adminArea}</nav>
     <div class="topbar-end">
+      ${idChip}
       <button class="theme-toggle" data-action="toggle-theme">${isDark ? '☀ Light' : '☾ Dark'}</button>
       <button class="nav-burger" data-action="toggle-nav" aria-label="Menu">
         <span></span><span></span><span></span>
@@ -93,6 +104,20 @@ async function render(opts = {}) {
     return;
   }
 
+  // Backfill the cached name for devices that picked a player before names were stored.
+  if (myId && !myName) {
+    const p = data.players.find((x) => x.id === myId);
+    if (p) { myName = p.name; localStorage.setItem('lbh_me_name', myName); }
+  }
+
+  // First-open login: greet with "Who are you?" until you pick a name (remembered
+  // on this device) or choose to look around first.
+  if (!myId && !skipId) {
+    if (refreshTimer) { clearInterval(refreshTimer); refreshTimer = null; }
+    root.innerHTML = `<main class="container idgate-wrap">${renderIdentityGate([...data.players].sort((a, b) => a.id - b.id))}</main>`;
+    return;
+  }
+
   let body;
   if (route.startsWith('/draft/player/')) {
     const playerId = Number(route.split('/')[3]);
@@ -107,6 +132,9 @@ async function render(opts = {}) {
         break;
       case '/bracket':
         body = renderBracket(getBracket(data));
+        break;
+      case '/tips':
+        body = renderTips(getTipLadder(data), getTipsView(data, myId), myId);
         break;
       case '/draft': {
         const ds = getDraftState(data);
@@ -169,7 +197,7 @@ function scrollToCurrentMatch(route) {
 // Ladder + fixtures refresh themselves so entered scores appear without a reload.
 function setAutoRefresh(route) {
   if (refreshTimer) { clearInterval(refreshTimer); refreshTimer = null; }
-  if (route === '/' || route === '/fixtures') {
+  if (route === '/' || route === '/fixtures' || route === '/tips') {
     refreshTimer = setInterval(() => { if (currentRoute() === route) render(); }, 60000);
   } else if (route === '/draft') {
     // Waiting players poll so picks appear live; the person mid-pick isn't yanked.
@@ -255,14 +283,28 @@ root.addEventListener('click', (e) => {
     render();
   } else if (action === 'set-me') {
     myId = Number(el.dataset.playerId);
+    myName = el.dataset.playerName || null;
     localStorage.setItem('lbh_me', String(myId));
+    if (myName) localStorage.setItem('lbh_me_name', myName);
+    skipId = false; sessionStorage.removeItem('lbh_skip_id');
     render();
   } else if (action === 'clear-me') {
-    myId = null;
+    myId = null; myName = null;
     localStorage.removeItem('lbh_me');
+    localStorage.removeItem('lbh_me_name');
+    skipId = false; sessionStorage.removeItem('lbh_skip_id');
+    render();
+  } else if (action === 'skip-id') {
+    skipId = true; sessionStorage.setItem('lbh_skip_id', '1');
+    render();
+  } else if (action === 'signin') {
+    skipId = false; sessionStorage.removeItem('lbh_skip_id');
     render();
   } else if (action === 'draft-pick') {
     run(() => store.makePick(Number(el.dataset.teamId)));
+  } else if (action === 'tip') {
+    if (!myId) { window.alert('Pick your name first.'); return; }
+    run(() => store.saveTip(myId, Number(el.dataset.fixtureId), el.dataset.pick));
   } else if (action === 'del-fixture') {
     if (!window.confirm('Delete this knockout match?')) return;
     run(() => store.deleteFixture(Number(el.dataset.id)));

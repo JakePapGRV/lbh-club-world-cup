@@ -49,6 +49,29 @@ function rankSort(a, b) {
   return ra - rb || String(a.name).localeCompare(String(b.name));
 }
 
+// The decided outcome of a FINISHED fixture, for tip-checking. 'home' | 'draw' |
+// 'away' | null (not finished / undecided). Group games are read from the score;
+// knockouts use the advancing team (so penalty wins resolve correctly), falling
+// back to the score if no winner was recorded.
+function outcomeOf(f) {
+  if (f.status !== 'finished') return null;
+  if (!KO_STAGES.includes(f.stage)) {
+    if (f.home_score == null || f.away_score == null) return null;
+    if (f.home_score > f.away_score) return 'home';
+    if (f.home_score < f.away_score) return 'away';
+    return 'draw';
+  }
+  if (f.winner_team_id != null) {
+    if (f.winner_team_id === f.home_team_id) return 'home';
+    if (f.winner_team_id === f.away_team_id) return 'away';
+  }
+  if (f.home_score != null && f.away_score != null) {
+    if (f.home_score > f.away_score) return 'home';
+    if (f.home_score < f.away_score) return 'away';
+  }
+  return null;
+}
+
 export function getDraftState(data) {
   const { settings, picks, teams } = data;
   const started = settings.draft_status !== 'not_started';
@@ -223,5 +246,77 @@ export function getTeamView(data, teamId) {
       .filter((f) => f.home_team_id === teamId || f.away_team_id === teamId)
       .sort(fxSort)
       .map((f) => decorateFixture(f, teamById, owners)),
+  };
+}
+
+// ---------------------------------------------------------------- Tipping
+// Standings for the tipping game: 1 point per correct tip. `tipped` is how many
+// finished matches a mate submitted a tip for (the denominator).
+export function getTipLadder(data) {
+  const outcomes = {};
+  for (const f of data.fixtures) if (f.status === 'finished') outcomes[f.id] = outcomeOf(f);
+
+  const stats = {};
+  for (const p of data.players) stats[p.id] = { tipped: 0, points: 0 };
+  for (const t of data.tips || []) {
+    if (!(t.fixture_id in outcomes)) continue; // match not finished yet
+    (stats[t.player_id] ||= { tipped: 0, points: 0 }).tipped += 1;
+    if (outcomes[t.fixture_id] != null && t.pick === outcomes[t.fixture_id]) stats[t.player_id].points += 1;
+  }
+
+  return [...data.players]
+    .map((p) => ({ ...p, tipped: stats[p.id].tipped, points: stats[p.id].points }))
+    .sort((a, b) => b.points - a.points || b.tipped - a.tipped || a.name.localeCompare(b.name));
+}
+
+// Tipping page model. Splits matches into `toTip` (open — soonest first) and
+// `results` (kicked off or finished — most recent first), grouped by date like
+// the fixtures page. Each mate's pick is hidden from the others until kickoff:
+// `allTips` is only populated once a match is `locked`.
+export function getTipsView(data, myId) {
+  const teamById = byId(data.teams);
+  const owners = ownerNames(data);
+  const players = [...data.players].sort((a, b) => a.id - b.id);
+  const now = Date.now();
+
+  const tipsByFixture = {};
+  for (const t of data.tips || []) (tipsByFixture[t.fixture_id] ||= []).push(t);
+
+  const decorate = (f) => {
+    const d = decorateFixture(f, teamById, owners);
+    const ko = f.kickoff ? Date.parse(f.kickoff) : null;
+    const locked = f.status === 'finished' || (ko != null && ko <= now);
+    const fixtureTips = tipsByFixture[f.id] || [];
+    const myTip = myId ? fixtureTips.find((t) => t.player_id === myId) : null;
+    const outcome = outcomeOf(f);
+    const allTips = locked
+      ? players.map((p) => {
+          const tp = fixtureTips.find((t) => t.player_id === p.id);
+          const pick = tp ? tp.pick : null;
+          return { name: p.name, pick, correct: pick != null && outcome != null && pick === outcome };
+        })
+      : null;
+    return {
+      ...d,
+      locked,
+      tipOptions: f.stage === 'group' ? ['home', 'draw', 'away'] : ['home', 'away'],
+      myPick: myTip ? myTip.pick : null,
+      tippedCount: fixtureTips.length,
+      playerCount: players.length,
+      outcome,
+      allTips,
+    };
+  };
+
+  const all = [...data.fixtures].sort(fxSort).map(decorate);
+  const groupByDate = (list) => {
+    const groups = {};
+    for (const f of list) (groups[f.date_label] ||= []).push(f);
+    return Object.entries(groups).map(([title, items]) => ({ title, fixtures: items }));
+  };
+
+  return {
+    toTip: groupByDate(all.filter((f) => !f.locked)),
+    results: groupByDate(all.filter((f) => f.locked).reverse()),
   };
 }
