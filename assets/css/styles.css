@@ -328,7 +328,7 @@ h2::before {
   border-color: var(--accent-bd); background: var(--accent-dim);
   color: var(--accent); font-weight: 700;
 }
-.narrow { max-width: 360px; }
+.narrow { max-width: 360px; margin-left: auto; margin-right: auto; width: 100%; }
 
 /* ---- BUTTONS ---- */
 button {
