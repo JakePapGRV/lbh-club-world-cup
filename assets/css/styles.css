@@ -253,6 +253,9 @@ body.nav-open .nav-drawer { display: flex; }
   color: var(--nav-active-color);
 }
 
+/* ---- BOTTOM NAV (mobile icon bar) ---- */
+.bottom-nav { display: none; }
+
 button.link {
   background: none; border: none; cursor: pointer; min-height: unset;
   font-family: var(--font); font-weight: 700; font-size: .9rem;
@@ -686,6 +689,43 @@ body[data-route="bracket"] .container { max-width:100%; padding-left:0; padding-
 .score-row button { margin-left:auto; padding:.45rem .8rem; min-height:36px; font-size:.82rem; }
 
 /* ---- RESPONSIVE ---- */
+/* ============================================================
+   MOBILE NAV — hide topbar, show bottom icon bar (≤767px)
+============================================================ */
+
+@media(max-width: 767px) {
+  .topbar { display: none !important; }
+
+  .bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    align-items: center;
+    justify-content: space-around;
+    background: #000;
+    border-top: 1px solid rgba(255,255,255,.07);
+    height: calc(64px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    z-index: 200;
+  }
+  .bnav-item {
+    display: flex; align-items: center; justify-content: center;
+    width: 68px; height: 52px;
+    border-radius: 14px;
+    text-decoration: none;
+    transition: background .15s;
+  }
+  .bnav-item.active { background: rgba(244,255,123,.13); }
+  .bnav-icon {
+    display: block; height: 28px; width: auto;
+    opacity: .32;
+    transition: opacity .15s;
+  }
+  .bnav-item.active .bnav-icon { opacity: 1; }
+
+  body { padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
+}
+
 /* ============================================================
    MOBILE — primary target: 375–430px (iPhone)
 ============================================================ */

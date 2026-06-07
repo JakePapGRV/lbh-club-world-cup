@@ -2,8 +2,8 @@
 // Pages base path with no server rewrites.
 
 import { store } from './store.js?v=5';
-import { getLadder, getFixturesView, getBracket, getDraftState, getTeamsView, getPlayerView, getTeamView } from './compute.js?v=19';
-import { renderLadder, renderFixtures, renderBracket, renderDraft, renderAdmin, renderLogin, renderTeamsOverview, renderPlayerView, renderTeamView } from './views.js?v=19';
+import { getLadder, getFixturesView, getBracket, getDraftState, getTeamsView, getPlayerView, getTeamView } from './compute.js?v=20';
+import { renderLadder, renderFixtures, renderBracket, renderDraft, renderAdmin, renderLogin, renderTeamsOverview, renderPlayerView, renderTeamView } from './views.js?v=20';
 
 const root = document.getElementById('root');
 const PASSWORD = (window.LBH_CONFIG || {}).ADMIN_PASSWORD || 'admin';
@@ -61,7 +61,21 @@ function headerHtml(route) {
       </button>
     </div>
     <div class="nav-drawer">${links}${adminArea}</div>
-  </header>`;
+  </header>
+  <nav class="bottom-nav" aria-label="Navigation">
+    <a href="#/" class="bnav-item ${ak === 'ladder' ? 'active' : ''}" aria-label="Ladder">
+      <img src="assets/img/nav-ladder.svg" class="bnav-icon" alt="">
+    </a>
+    <a href="#/fixtures" class="bnav-item ${ak === 'fixtures' ? 'active' : ''}" aria-label="Fixtures">
+      <img src="assets/img/nav-fixtures.svg" class="bnav-icon" alt="">
+    </a>
+    <a href="#/draft" class="bnav-item ${ak === 'draft' ? 'active' : ''}" aria-label="Teams">
+      <img src="assets/img/nav-teams.svg" class="bnav-icon" alt="">
+    </a>
+    <a href="#/bracket" class="bnav-item ${ak === 'bracket' ? 'active' : ''}" aria-label="Bracket">
+      <img src="assets/img/nav-bracket.svg" class="bnav-icon" alt="">
+    </a>
+  </nav>`;
 }
 
 function paint(route, body) {
