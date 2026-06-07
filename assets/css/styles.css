@@ -600,6 +600,42 @@ body[data-route="bracket"] .container { max-width:100%; padding-left:0; padding-
 .ko-side.tbd .ko-team { color:var(--text-3); font-weight:500; }
 .round-pts { font-size:.6rem; font-weight:800; text-transform:uppercase; letter-spacing:.08em; color:#fff; background:var(--h1-color); border-radius:4px; padding:.12rem .5rem; transition:background .45s ease; }
 
+/* Mobile bracket tabs (visible below 1000px, tree hidden) */
+.bkt-mobile { display:none; }
+.bm-input { display:none; }
+.bm-tabs { display:flex; border-bottom:1px solid var(--border); background:var(--bg-2); }
+.bm-label {
+  flex:1; text-align:center; padding:.65rem .25rem;
+  font-family:var(--font); font-weight:700; font-size:.78rem;
+  text-transform:uppercase; letter-spacing:.06em;
+  color:var(--text-3); cursor:pointer;
+  border-bottom:3px solid transparent;
+  transition:color .15s, border-color .15s;
+}
+.bm-label:hover { color:var(--text); }
+#bm-r32:checked ~ .bm-tabs label[for="bm-r32"],
+#bm-r16:checked ~ .bm-tabs label[for="bm-r16"],
+#bm-ko:checked  ~ .bm-tabs label[for="bm-ko"] {
+  color:var(--h1-color); border-bottom-color:var(--h1-color);
+}
+.bm-panel { display:none; padding:1rem; }
+#bm-r32:checked ~ #bmp-r32,
+#bm-r16:checked ~ #bmp-r16,
+#bm-ko:checked  ~ #bmp-ko { display:block; }
+.bm-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:.65rem; }
+.bm-stage-lbl {
+  font-family:var(--font); font-weight:800; font-size:.82rem;
+  text-transform:uppercase; letter-spacing:.06em;
+  color:var(--text); margin:1.2rem 0 .5rem;
+  display:flex; align-items:center; gap:.5rem;
+}
+.bm-stage-lbl:first-child { margin-top:0; }
+
+@media(max-width:999px) {
+  .bkt-page { display:none; }
+  .bkt-mobile { display:block; }
+}
+
 /* ---- DRAFT ---- */
 .draft-head { display:flex; justify-content:space-between; align-items:center; gap:.75rem; flex-wrap:wrap; }
 .draft-head form { margin:0; }

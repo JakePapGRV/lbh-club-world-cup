@@ -100,6 +100,7 @@ export function renderBracket(b) {
   const [r16L, r16R] = half(r16);
   const [qfL,  qfR]  = half(qf);
   const [sfL,  sfR]  = half(sf);
+  const grid = ms => `<div class="bm-grid">${ms.map(koMatch).join('')}</div>`;
   return `
   <div class="bracket-hdr">
     <h1>Bracket</h1>
@@ -133,6 +134,27 @@ export function renderBracket(b) {
       ${bkCol(qfR,  'right')}
       ${bkCol(r16R, 'right')}
       ${bkCol(r32R, 'right')}
+    </div>
+  </div>
+  <div class="bkt-mobile">
+    <input type="radio" name="bm" id="bm-r32" class="bm-input" checked>
+    <input type="radio" name="bm" id="bm-r16" class="bm-input">
+    <input type="radio" name="bm" id="bm-ko"  class="bm-input">
+    <div class="bm-tabs">
+      <label for="bm-r32" class="bm-label">Rnd 32</label>
+      <label for="bm-r16" class="bm-label">Rnd 16</label>
+      <label for="bm-ko"  class="bm-label">QF–Final</label>
+    </div>
+    <div class="bm-panel" id="bmp-r32">${grid(r32)}</div>
+    <div class="bm-panel" id="bmp-r16">${grid(r16)}</div>
+    <div class="bm-panel" id="bmp-ko">
+      <p class="bm-stage-lbl">Quarter Finals <span class="round-pts">3 pts</span></p>
+      ${grid(qf)}
+      <p class="bm-stage-lbl">Semi Finals <span class="round-pts">4 pts</span></p>
+      ${grid(sf)}
+      <p class="bm-stage-lbl">Final <span class="round-pts">5 pts</span></p>
+      ${koMatch(fin[0])}
+      ${b.thirdPlace ? `<p class="bm-stage-lbl">3rd Place</p>${koMatch(b.thirdPlace)}` : ''}
     </div>
   </div>`;
 }
