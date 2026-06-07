@@ -903,12 +903,54 @@ body[data-route="bracket"] .container { max-width:100%; padding-left:0; padding-
 ============================================================ */
 
 /* Date group header — yellow bold, no left bar */
-.fxday { margin-bottom: 1.6rem; }
+/* ---- FIXTURES ACCORDION ---- */
+.fxday {
+  margin-bottom: .55rem;
+  border: 1px solid var(--border-em);
+  border-radius: var(--r);
+  overflow: hidden;
+}
 
-.fxday-header {
-  font-family: var(--font); font-weight: 800; font-size: 1.15rem;
-  letter-spacing: .04em; color: #f4ff7b;
-  margin-bottom: .65rem; text-transform: none;
+.fxday > summary {
+  list-style: none;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: .5rem;
+  padding: .7rem 1rem;
+  background: var(--bg-2);
+  cursor: pointer;
+  user-select: none;
+}
+.fxday > summary::-webkit-details-marker { display: none; }
+
+.fxday-title {
+  font-family: var(--font); font-weight: 800; font-size: .9rem;
+  text-transform: uppercase; letter-spacing: .06em; color: var(--text);
+  flex: 1;
+}
+
+/* Chevron arrow */
+.fxday > summary::after {
+  content: '›';
+  font-size: 1.1rem; line-height: 1;
+  color: var(--text-3);
+  transition: transform .2s ease;
+  flex-shrink: 0;
+}
+.fxday[open] > summary::after { transform: rotate(90deg); }
+
+/* Played count badge */
+.fxday-badge {
+  font-family: var(--font-body); font-size: .72rem; font-weight: 700;
+  color: var(--text-3); white-space: nowrap;
+}
+.fxday-badge.done {
+  color: #22c55e;
+}
+
+.fxday-body {
+  padding: .75rem;
+  display: flex; flex-direction: column; gap: .5rem;
+  border-top: 1px solid var(--border);
 }
 
 /* Fixture card — same gradient as branding, tall 3-row layout */
@@ -973,7 +1015,7 @@ body[data-route="bracket"] .container { max-width:100%; padding-left:0; padding-
 
 /* Mobile tweaks */
 @media(max-width:480px) {
-  .fxday-header { font-size: 1rem; }
+  .fxday-title { font-size: .82rem; }
   .fxc-team { font-size: .95rem; }
   .fxc-sep  { font-size: .95rem; min-width: 2rem; }
 }

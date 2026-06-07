@@ -56,14 +56,42 @@ export function renderFixtures(groups) {
     </div>`;
   };
 
+  // Determine which group should be open by default:
+  // The last group that has started (kickoff passed) but isn't fully played yet.
+  // If no such group exists, open the first upcoming group.
+  const now = Date.now();
+  let activeTitle = null;
+  for (const g of groups) {
+    const hasStarted = g.date_ts != null && g.date_ts <= now + 2 * 3600 * 1000; // 2hr lead-in
+    const hasAnyPlayed = g.fixtures.some(f => f.status === 'finished');
+    if ((hasStarted || hasAnyPlayed) && !g.allPlayed) activeTitle = g.title;
+  }
+  if (!activeTitle) {
+    const next = groups.find(g => !g.allPlayed && g.date_ts != null && g.date_ts > now);
+    if (next) activeTitle = next.title;
+  }
+
   return `
   <h1>Fixtures</h1>
   <p class="hint">Times shown in AEST. Owner names appear once the draft is complete.</p>
-  ${groups.map((g) => `
-    <section class="fxday">
-      <div class="fxday-header">${esc(g.title)}</div>
-      ${g.fixtures.map(card).join('')}
-    </section>`).join('')}
+  ${groups.map((g) => {
+    const played = g.fixtures.filter(f => f.status === 'finished').length;
+    const total = g.fixtures.length;
+    const badge = g.allPlayed
+      ? `<span class="fxday-badge done">All played</span>`
+      : played > 0
+        ? `<span class="fxday-badge">${played}/${total} played</span>`
+        : `<span class="fxday-badge">${total} match${total !== 1 ? 'es' : ''}</span>`;
+    const isOpen = g.title === activeTitle;
+    return `
+    <details class="fxday" data-group="${esc(g.title)}"${isOpen ? ' open' : ''}>
+      <summary class="fxday-header">
+        <span class="fxday-title">${esc(g.title)}</span>
+        ${badge}
+      </summary>
+      <div class="fxday-body">${g.fixtures.map(card).join('')}</div>
+    </details>`;
+  }).join('')}
   <div class="view-btn-wrap"><a class="view-btn" href="#/">View Ladder</a></div>`;
 }
 

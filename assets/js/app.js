@@ -2,8 +2,8 @@
 // Pages base path with no server rewrites.
 
 import { store } from './store.js?v=5';
-import { getLadder, getFixturesView, getBracket, getDraftState, getTeamsView, getPlayerView, getTeamView } from './compute.js?v=30';
-import { renderLadder, renderFixtures, renderBracket, renderDraft, renderAdmin, renderLogin, renderTeamsOverview, renderPlayerView, renderTeamView } from './views.js?v=30';
+import { getLadder, getFixturesView, getBracket, getDraftState, getTeamsView, getPlayerView, getTeamView } from './compute.js?v=31';
+import { renderLadder, renderFixtures, renderBracket, renderDraft, renderAdmin, renderLogin, renderTeamsOverview, renderPlayerView, renderTeamView } from './views.js?v=31';
 
 const root = document.getElementById('root');
 const PASSWORD = (window.LBH_CONFIG || {}).ADMIN_PASSWORD || 'admin';
@@ -83,8 +83,20 @@ function headerHtml(route) {
 
 function paint(route, body) {
   const routeKey = activeKey(route);
+  // Snapshot fixture accordion open state so auto-refresh doesn't reset manual toggles
+  const openGroups = new Set();
+  const hadAccordions = !!document.querySelector('.fxday');
+  document.querySelectorAll('.fxday[open]').forEach(el => {
+    if (el.dataset.group) openGroups.add(el.dataset.group);
+  });
   document.body.dataset.route = routeKey || 'ladder';
   root.innerHTML = headerHtml(route) + `<main class="container" id="app">${body}</main>`;
+  // Restore open state on auto-refresh (skip on first load — let the smart default apply)
+  if (hadAccordions && openGroups.size > 0) {
+    document.querySelectorAll('.fxday').forEach(el => {
+      if (el.dataset.group) el.open = openGroups.has(el.dataset.group);
+    });
+  }
 }
 
 async function render(opts = {}) {
