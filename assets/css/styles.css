@@ -741,15 +741,15 @@ body[data-route="bracket"] .container { max-width:100%; padding-left:0; padding-
     -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
     -webkit-mask-size: contain;     mask-size: contain;
     -webkit-mask-position: center;  mask-position: center;
-    opacity: .20;
+    opacity: .30;
     transition: opacity .15s;
   }
   .bnav-item.active .bnav-icon { opacity: 1; }
-  .bnav-ladder   { -webkit-mask-image: url(assets/img/nav-ladder.svg);   mask-image: url(assets/img/nav-ladder.svg);   }
-  .bnav-fixtures { -webkit-mask-image: url(assets/img/nav-fixtures.svg); mask-image: url(assets/img/nav-fixtures.svg); }
-  .bnav-teams    { -webkit-mask-image: url(assets/img/nav-teams.svg);    mask-image: url(assets/img/nav-teams.svg);    }
-  .bnav-bracket  { -webkit-mask-image: url(assets/img/nav-bracket.svg);  mask-image: url(assets/img/nav-bracket.svg);  }
-  .bnav-admin    { -webkit-mask-image: url(assets/img/nav-admin.svg);    mask-image: url(assets/img/nav-admin.svg);    }
+  .bnav-ladder   { -webkit-mask-image: url(../img/nav-ladder.svg);   mask-image: url(../img/nav-ladder.svg);   }
+  .bnav-fixtures { -webkit-mask-image: url(../img/nav-fixtures.svg); mask-image: url(../img/nav-fixtures.svg); }
+  .bnav-teams    { -webkit-mask-image: url(../img/nav-teams.svg);    mask-image: url(../img/nav-teams.svg);    }
+  .bnav-bracket  { -webkit-mask-image: url(../img/nav-bracket.svg);  mask-image: url(../img/nav-bracket.svg);  }
+  .bnav-admin    { -webkit-mask-image: url(../img/nav-admin.svg);    mask-image: url(../img/nav-admin.svg);    }
 
   body { padding-bottom: calc(104px + env(safe-area-inset-bottom, 0px)); }
 }
