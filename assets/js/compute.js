@@ -161,7 +161,12 @@ export function getFixturesView(data) {
   const fixtures = [...data.fixtures].sort(fxSort).map((f) => decorateFixture(f, teamById, owners));
   const groups = {};
   for (const f of fixtures) (groups[f.date_label] ||= []).push(f);
-  return Object.entries(groups).map(([title, items]) => ({ title, fixtures: items }));
+  return Object.entries(groups).map(([title, items]) => ({
+    title,
+    fixtures: items,
+    allPlayed: items.every(f => f.status === 'finished'),
+    date_ts: items[0]?.kickoff ? Date.parse(items[0].kickoff) : null,
+  }));
 }
 
 const KO_ROUNDS = [

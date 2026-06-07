@@ -56,23 +56,50 @@ export function renderFixtures(groups) {
     </div>`;
   };
 
+  // Determine which group should be open by default:
+  // The last group that has started (kickoff passed) but isn't fully played yet.
+  // If no such group exists, open the first upcoming group.
+  const now = Date.now();
+  let activeTitle = null;
+  for (const g of groups) {
+    const hasStarted = g.date_ts != null && g.date_ts <= now + 2 * 3600 * 1000; // 2hr lead-in
+    const hasAnyPlayed = g.fixtures.some(f => f.status === 'finished');
+    if ((hasStarted || hasAnyPlayed) && !g.allPlayed) activeTitle = g.title;
+  }
+  if (!activeTitle) {
+    const next = groups.find(g => !g.allPlayed && g.date_ts != null && g.date_ts > now);
+    if (next) activeTitle = next.title;
+  }
+
   return `
   <h1>Fixtures</h1>
   <p class="hint">Times shown in AEST. Owner names appear once the draft is complete.</p>
-  ${groups.map((g) => `
-    <section class="fxday">
-      <div class="fxday-header">${esc(g.title)}</div>
-      ${g.fixtures.map(card).join('')}
-    </section>`).join('')}
+  ${groups.map((g) => {
+    const played = g.fixtures.filter(f => f.status === 'finished').length;
+    const total = g.fixtures.length;
+    const badge = g.allPlayed
+      ? `<span class="fxday-badge done">All played</span>`
+      : played > 0
+        ? `<span class="fxday-badge">${played}/${total} played</span>`
+        : `<span class="fxday-badge">${total} match${total !== 1 ? 'es' : ''}</span>`;
+    const isOpen = g.title === activeTitle;
+    return `
+    <details class="fxday" data-group="${esc(g.title)}"${isOpen ? ' open' : ''}>
+      <summary class="fxday-header">
+        <span class="fxday-title">${esc(g.title)}</span>
+        ${badge}
+      </summary>
+      <div class="fxday-body">${g.fixtures.map(card).join('')}</div>
+    </details>`;
+  }).join('')}
   <div class="view-btn-wrap"><a class="view-btn" href="#/">View Ladder</a></div>`;
 }
 
 // --------------------------------------------------------------- Bracket
-function koSide(name, owner, score, isWinner, finished, tbd) {
+function koSide(name, score, isWinner, finished, tbd) {
   return `
     <div class="ko-side ${isWinner ? 'win' : ''} ${tbd ? 'tbd' : ''}">
       <span class="ko-team">${tbd ? 'TBD' : esc(name || 'TBD')}</span>
-      <span class="ko-owner">${esc(owner || '')}</span>
       <span class="ko-score">${finished && score != null ? score : ''}</span>
     </div>`;
 }
@@ -80,31 +107,105 @@ function koMatch(m) {
   const finished = m.status === 'finished';
   return `
     <div class="ko-match ${finished ? 'played' : ''} ${m.tbd ? 'is-tbd' : ''}">
-      ${!m.tbd && m.time_label ? `<div class="ko-when">${esc(m.date_label)} · ${esc(m.time_label)}</div>` : ''}
-      ${koSide(m.home_name, m.home_owner, m.home_score, m.home_is_winner, finished, m.tbd)}
-      ${koSide(m.away_name, m.away_owner, m.away_score, m.away_is_winner, finished, m.tbd)}
+      ${koSide(m.home_name, m.home_score, m.home_is_winner, finished, m.tbd)}
+      ${koSide(m.away_name, m.away_score, m.away_is_winner, finished, m.tbd)}
     </div>`;
 }
-export function renderBracket(b) {
+function bkCol(matches, side) {
+  if (matches.length === 1) {
+    return `<div class="bk-col bk-${side}"><div class="bk-slot">${koMatch(matches[0])}</div></div>`;
+  }
+  let html = `<div class="bk-col bk-${side}">`;
+  for (let i = 0; i < matches.length; i += 2) {
+    html += `<div class="bk-pair"><div class="bk-slot">${koMatch(matches[i])}</div><div class="bk-slot">${koMatch(matches[i + 1])}</div></div>`;
+  }
+  return html + `</div>`;
+}
+// Mobile bracket row: two feed matches on the left → one advance match on the right
+function mbRow(feed1, feed2, advance) {
   return `
-  <h1>Knockout Bracket</h1>
-  ${b.hasAny
-    ? `<p class="hint">Advancing team highlighted. The name underneath each nation is the mate who owns it. Points: R32 = 1, R16 = 2, QF = 3, SF = 4, Final = 5.</p>`
-    : `<p class="hint">The knockout bracket fills in after the group stage (add knockout matches from the Admin page once they're known). The structure is shown below.</p>`}
-  <div class="bracket">
-    ${b.rounds.map((rd) => `
-      <div class="round">
-        <h3 class="round-label">${esc(rd.label)} <span class="round-pts">${rd.pts} pt${rd.pts > 1 ? 's' : ''}</span></h3>
-        <div class="round-matches">
-          ${rd.matches.map(koMatch).join('')}
-        </div>
-      </div>`).join('')}
+  <div class="mb-section">
+    <div class="mb-pair">
+      <div class="mb-slot">${koMatch(feed1)}</div>
+      <div class="mb-slot">${koMatch(feed2)}</div>
+    </div>
+    <div class="mb-advance">${koMatch(advance)}</div>
+  </div>`;
+}
+
+export function renderBracket(b) {
+  const [r32, r16, qf, sf, fin] = b.rounds.map(r => r.matches);
+  const half = a => [a.slice(0, a.length / 2), a.slice(a.length / 2)];
+  const [r32L, r32R] = half(r32);
+  const [r16L, r16R] = half(r16);
+  const [qfL,  qfR]  = half(qf);
+  const [sfL,  sfR]  = half(sf);
+
+  // R32 panel: 8 bracket rows [r32[i], r32[i+1]] → r16[i/2]
+  let r32html = '';
+  for (let i = 0; i < r32.length; i += 2) r32html += mbRow(r32[i], r32[i + 1], r16[i / 2]);
+
+  // R16 panel: 4 bracket rows [r16[i], r16[i+1]] → qf[i/2]
+  let r16html = '';
+  for (let i = 0; i < r16.length; i += 2) r16html += mbRow(r16[i], r16[i + 1], qf[i / 2]);
+
+  // QF–Final panel: QF pairs → SF, then SF pair → Final
+  const kohtml = `
+    <p class="bm-stage-lbl">Quarter-Finals → Semi-Finals <span class="round-pts">3 pts</span></p>
+    ${mbRow(qf[0], qf[1], sf[0])}
+    ${mbRow(qf[2], qf[3], sf[1])}
+    <p class="bm-stage-lbl">Semi-Finals → Final <span class="round-pts">4 pts</span></p>
+    ${mbRow(sf[0], sf[1], fin[0])}
+    ${b.thirdPlace ? `<p class="bm-stage-lbl">3rd Place <span class="round-pts">–</span></p><div class="mb-solo">${koMatch(b.thirdPlace)}</div>` : ''}`;
+
+  return `
+  <div class="bracket-hdr">
+    <h1>Bracket</h1>
+    ${b.hasAny
+      ? `<p class="hint">Advancing team highlighted. Points: R32=1, R16=2, QF=3, SF=4, Final=5.</p>`
+      : `<p class="hint">Bracket fills in after the group stage.</p>`}
   </div>
-  ${b.thirdPlace ? `
-    <div class="third-place">
-      <h3 class="round-label">Third-place playoff <span class="round-pts">1 pt</span></h3>
-      ${koMatch(b.thirdPlace)}
-    </div>` : ''}`;
+  <div class="bkt-page">
+    <div class="bkt-header">
+      <div class="bkt-hcol">R32</div>
+      <div class="bkt-hcol">R16</div>
+      <div class="bkt-hcol">QF</div>
+      <div class="bkt-hcol">SF</div>
+      <div class="bkt-hcol bkt-hcol-center">FINAL</div>
+      <div class="bkt-hcol">SF</div>
+      <div class="bkt-hcol">QF</div>
+      <div class="bkt-hcol">R16</div>
+      <div class="bkt-hcol">R32</div>
+    </div>
+    <div class="bkt-body">
+      ${bkCol(r32L, 'left')}
+      ${bkCol(r16L, 'left')}
+      ${bkCol(qfL,  'left')}
+      ${bkCol(sfL,  'left')}
+      <div class="bk-center">
+        <img class="bk-logo" src="assets/img/favicon.svg" alt="LBH">
+        <div class="bk-final-slot">${koMatch(fin[0])}</div>
+        ${b.thirdPlace ? `<div class="bk-third"><p class="bk-third-lbl">3rd Place</p>${koMatch(b.thirdPlace)}</div>` : ''}
+      </div>
+      ${bkCol(sfR,  'right')}
+      ${bkCol(qfR,  'right')}
+      ${bkCol(r16R, 'right')}
+      ${bkCol(r32R, 'right')}
+    </div>
+  </div>
+  <div class="bkt-mobile">
+    <input type="radio" name="bm" id="bm-r32" class="bm-input" checked>
+    <input type="radio" name="bm" id="bm-r16" class="bm-input">
+    <input type="radio" name="bm" id="bm-ko"  class="bm-input">
+    <div class="bm-tabs">
+      <label for="bm-r32" class="bm-label">R32</label>
+      <label for="bm-r16" class="bm-label">R16</label>
+      <label for="bm-ko"  class="bm-label">QF–Final</label>
+    </div>
+    <div class="bm-panel" id="bmp-r32">${r32html}</div>
+    <div class="bm-panel" id="bmp-r16">${r16html}</div>
+    <div class="bm-panel" id="bmp-ko">${kohtml}</div>
+  </div>`;
 }
 
 // --------------------------------------------------------------- Tipping

@@ -61,7 +61,7 @@ function headerHtml(route) {
   return `
   <header class="topbar">
     <a class="brand" href="#/">
-      <img class="brand-logo-img" src="assets/img/logo.svg" alt="LBH Club World Cup Draft" width="80" height="36" />
+      <img class="brand-logo-img" src="assets/img/logo-black.svg" alt="LBH Club World Cup Draft" width="80" height="36" />
     </a>
     <nav class="topbar-nav">${links}${adminArea}</nav>
     <div class="topbar-end">
@@ -72,13 +72,42 @@ function headerHtml(route) {
       </button>
     </div>
     <div class="nav-drawer">${links}${adminArea}</div>
-  </header>`;
+  </header>
+  <nav class="bottom-nav" aria-label="Navigation">
+    <a href="#/" class="bnav-item ${ak === 'ladder' ? 'active' : ''}" aria-label="Ladder">
+      <span class="bnav-icon bnav-ladder"></span>
+    </a>
+    <a href="#/fixtures" class="bnav-item ${ak === 'fixtures' ? 'active' : ''}" aria-label="Fixtures">
+      <span class="bnav-icon bnav-fixtures"></span>
+    </a>
+    <a href="#/draft" class="bnav-item ${ak === 'draft' ? 'active' : ''}" aria-label="Teams">
+      <span class="bnav-icon bnav-teams"></span>
+    </a>
+    <a href="#/bracket" class="bnav-item ${ak === 'bracket' ? 'active' : ''}" aria-label="Bracket">
+      <span class="bnav-icon bnav-bracket"></span>
+    </a>
+    <a href="${isAdmin ? '#/admin' : '#/login'}" class="bnav-item ${ak === 'admin' ? 'active' : ''}" aria-label="Admin">
+      <span class="bnav-icon bnav-admin"></span>
+    </a>
+  </nav>`;
 }
 
 function paint(route, body) {
   const routeKey = activeKey(route);
+  // Snapshot fixture accordion open state so auto-refresh doesn't reset manual toggles
+  const openGroups = new Set();
+  const hadAccordions = !!document.querySelector('.fxday');
+  document.querySelectorAll('.fxday[open]').forEach(el => {
+    if (el.dataset.group) openGroups.add(el.dataset.group);
+  });
   document.body.dataset.route = routeKey || 'ladder';
   root.innerHTML = headerHtml(route) + `<main class="container" id="app">${body}</main>`;
+  // Restore open state on auto-refresh (skip on first load — let the smart default apply)
+  if (hadAccordions && openGroups.size > 0) {
+    document.querySelectorAll('.fxday').forEach(el => {
+      if (el.dataset.group) el.open = openGroups.has(el.dataset.group);
+    });
+  }
 }
 
 async function render(opts = {}) {
