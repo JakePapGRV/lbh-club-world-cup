@@ -68,11 +68,10 @@ export function renderFixtures(groups) {
 }
 
 // --------------------------------------------------------------- Bracket
-function koSide(name, owner, score, isWinner, finished, tbd) {
+function koSide(name, score, isWinner, finished, tbd) {
   return `
     <div class="ko-side ${isWinner ? 'win' : ''} ${tbd ? 'tbd' : ''}">
       <span class="ko-team">${tbd ? 'TBD' : esc(name || 'TBD')}</span>
-      <span class="ko-owner">${esc(owner || '')}</span>
       <span class="ko-score">${finished && score != null ? score : ''}</span>
     </div>`;
 }
@@ -80,40 +79,61 @@ function koMatch(m) {
   const finished = m.status === 'finished';
   return `
     <div class="ko-match ${finished ? 'played' : ''} ${m.tbd ? 'is-tbd' : ''}">
-      ${!m.tbd && m.time_label ? `<div class="ko-when">${esc(m.date_label)} · ${esc(m.time_label)}</div>` : ''}
-      ${koSide(m.home_name, m.home_owner, m.home_score, m.home_is_winner, finished, m.tbd)}
-      ${koSide(m.away_name, m.away_owner, m.away_score, m.away_is_winner, finished, m.tbd)}
+      ${koSide(m.home_name, m.home_score, m.home_is_winner, finished, m.tbd)}
+      ${koSide(m.away_name, m.away_score, m.away_is_winner, finished, m.tbd)}
     </div>`;
 }
+function bkCol(matches, side) {
+  if (matches.length === 1) {
+    return `<div class="bk-col bk-${side}"><div class="bk-slot">${koMatch(matches[0])}</div></div>`;
+  }
+  let html = `<div class="bk-col bk-${side}">`;
+  for (let i = 0; i < matches.length; i += 2) {
+    html += `<div class="bk-pair"><div class="bk-slot">${koMatch(matches[i])}</div><div class="bk-slot">${koMatch(matches[i + 1])}</div></div>`;
+  }
+  return html + `</div>`;
+}
 export function renderBracket(b) {
-  const TABS = [
-    { stage: 'R32',   label: 'Rnd 32' },
-    { stage: 'R16',   label: 'Rnd 16' },
-    { stage: 'QF',    label: 'QF' },
-    { stage: 'SF',    label: 'SF' },
-    { stage: 'final', label: 'Final' },
-  ];
+  const [r32, r16, qf, sf, fin] = b.rounds.map(r => r.matches);
+  const half = a => [a.slice(0, a.length / 2), a.slice(a.length / 2)];
+  const [r32L, r32R] = half(r32);
+  const [r16L, r16R] = half(r16);
+  const [qfL,  qfR]  = half(qf);
+  const [sfL,  sfR]  = half(sf);
   return `
   <div class="bracket-hdr">
     <h1>Bracket</h1>
     ${b.hasAny
-      ? `<p class="hint">Advancing team highlighted. Owner shown below. Points: R32=1, R16=2, QF=3, SF=4, Final=5.</p>`
+      ? `<p class="hint">Advancing team highlighted. Points: R32=1, R16=2, QF=3, SF=4, Final=5.</p>`
       : `<p class="hint">Bracket fills in after the group stage.</p>`}
   </div>
-  <div class="bracket-page">
-    ${TABS.map((t, i) => `<input type="radio" name="bt" id="bt-${t.stage}" class="bt-input"${i === 0 ? ' checked' : ''}>`).join('')}
-    <div class="bracket-tabs">
-      ${TABS.map((t) => `<label for="bt-${t.stage}" class="bt-label">${t.label}</label>`).join('')}
+  <div class="bkt-page">
+    <div class="bkt-header">
+      <div class="bkt-hcol">R32</div>
+      <div class="bkt-hcol">R16</div>
+      <div class="bkt-hcol">QF</div>
+      <div class="bkt-hcol">SF</div>
+      <div class="bkt-hcol bkt-hcol-center">FINAL</div>
+      <div class="bkt-hcol">SF</div>
+      <div class="bkt-hcol">QF</div>
+      <div class="bkt-hcol">R16</div>
+      <div class="bkt-hcol">R32</div>
     </div>
-    ${b.rounds.map((rd) => `
-      <div class="bracket-panel" id="bp-${rd.stage}">
-        <div class="round-matches">
-          ${rd.matches.map(koMatch).join('')}
-        </div>
-        ${rd.stage === 'final' && b.thirdPlace ? `
-          <p class="bracket-section-label">Third-place playoff <span class="round-pts">1 pt</span></p>
-          ${koMatch(b.thirdPlace)}` : ''}
-      </div>`).join('')}
+    <div class="bkt-body">
+      ${bkCol(r32L, 'left')}
+      ${bkCol(r16L, 'left')}
+      ${bkCol(qfL,  'left')}
+      ${bkCol(sfL,  'left')}
+      <div class="bk-center">
+        <img class="bk-logo" src="assets/img/favicon.svg" alt="LBH">
+        <div class="bk-final-slot">${koMatch(fin[0])}</div>
+        ${b.thirdPlace ? `<div class="bk-third"><p class="bk-third-lbl">3rd Place</p>${koMatch(b.thirdPlace)}</div>` : ''}
+      </div>
+      ${bkCol(sfR,  'right')}
+      ${bkCol(qfR,  'right')}
+      ${bkCol(r16R, 'right')}
+      ${bkCol(r32R, 'right')}
+    </div>
   </div>`;
 }
 
