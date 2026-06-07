@@ -39,13 +39,15 @@
   --hdr-text:        rgba(255,255,255,.55);
   --hdr-text-full:   #fff;
   --hdr-hover-bg:    rgba(255,255,255,.13);
+  /* Mobile nav icon colour */
+  --bnav-icon-color: #F4FF7B;
 }
 
-body[data-route="ladder"]   { --h1-color:#8bffec; --nav-active-bg:#8bffec; --nav-active-color:#1e1e1e; --hdr-text:rgba(30,30,30,.5);  --hdr-text-full:#1e1e1e; --hdr-hover-bg:rgba(0,0,0,.12); }
-body[data-route="fixtures"] { --h1-color:#f4ff7b; --nav-active-bg:#f4ff7b; --nav-active-color:#202123; --hdr-text:rgba(32,33,35,.5);  --hdr-text-full:#202123; --hdr-hover-bg:rgba(0,0,0,.12); }
-body[data-route="bracket"]  { --h1-color:#4d7cff; --nav-active-bg:#4d7cff; --nav-active-color:#fff;    --hdr-text:rgba(255,255,255,.55); --hdr-text-full:#fff; --hdr-hover-bg:rgba(255,255,255,.13); }
-body[data-route="draft"]    { --h1-color:#ff4b2b; --nav-active-bg:#ff4b2b; --nav-active-color:#fff;    --hdr-text:rgba(255,255,255,.55); --hdr-text-full:#fff; --hdr-hover-bg:rgba(255,255,255,.13); }
-body[data-route="admin"], body[data-route=""] { --h1-color:#9333EA; --nav-active-bg:#9333EA; --nav-active-color:#fff; --hdr-text:rgba(255,255,255,.55); --hdr-text-full:#fff; --hdr-hover-bg:rgba(255,255,255,.13); }
+body[data-route="ladder"]   { --h1-color:#8bffec; --nav-active-bg:#8bffec; --nav-active-color:#1e1e1e; --hdr-text:rgba(30,30,30,.5);    --hdr-text-full:#1e1e1e; --hdr-hover-bg:rgba(0,0,0,.12);         --bnav-icon-color:#1e1e1e; }
+body[data-route="fixtures"] { --h1-color:#f4ff7b; --nav-active-bg:#f4ff7b; --nav-active-color:#202123; --hdr-text:rgba(32,33,35,.5);    --hdr-text-full:#202123; --hdr-hover-bg:rgba(0,0,0,.12);         --bnav-icon-color:#202123; }
+body[data-route="bracket"]  { --h1-color:#4d7cff; --nav-active-bg:#4d7cff; --nav-active-color:#fff;    --hdr-text:rgba(255,255,255,.55); --hdr-text-full:#fff;    --hdr-hover-bg:rgba(255,255,255,.13); --bnav-icon-color:#F4FF7B; }
+body[data-route="draft"]    { --h1-color:#ff4b2b; --nav-active-bg:#ff4b2b; --nav-active-color:#fff;    --hdr-text:rgba(255,255,255,.55); --hdr-text-full:#fff;    --hdr-hover-bg:rgba(255,255,255,.13); --bnav-icon-color:#F4FF7B; }
+body[data-route="admin"], body[data-route=""] { --h1-color:#9333EA; --nav-active-bg:#9333EA; --nav-active-color:#fff; --hdr-text:rgba(255,255,255,.55); --hdr-text-full:#fff; --hdr-hover-bg:rgba(255,255,255,.13); --bnav-icon-color:#F4FF7B; }
 
 
 /* ---- DARK MODE ---- */
@@ -712,26 +714,37 @@ body[data-route="bracket"] .container { max-width:100%; padding-left:0; padding-
     bottom: 0; left: 0; right: 0;
     align-items: center;
     justify-content: space-around;
-    background: #000;
-    border-top: 1px solid rgba(255,255,255,.07);
+    background: var(--h1-color);
+    border-top: 1px solid rgba(0,0,0,.12);
     height: calc(64px + env(safe-area-inset-bottom, 0px));
     padding-bottom: env(safe-area-inset-bottom, 0px);
     z-index: 200;
+    transition: background .4s ease;
   }
   .bnav-item {
     display: flex; align-items: center; justify-content: center;
-    width: 68px; height: 52px;
+    width: 62px; height: 52px;
     border-radius: 14px;
     text-decoration: none;
     transition: background .15s;
   }
-  .bnav-item.active { background: rgba(244,255,123,.13); }
+  .bnav-item.active { background: rgba(0,0,0,.12); }
   .bnav-icon {
-    display: block; height: 28px; width: auto;
-    opacity: .32;
+    display: block;
+    width: 36px; height: 28px;
+    background-color: var(--bnav-icon-color);
+    -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+    -webkit-mask-size: contain;     mask-size: contain;
+    -webkit-mask-position: center;  mask-position: center;
+    opacity: .35;
     transition: opacity .15s;
   }
   .bnav-item.active .bnav-icon { opacity: 1; }
+  .bnav-ladder   { -webkit-mask-image: url(assets/img/nav-ladder.svg);   mask-image: url(assets/img/nav-ladder.svg);   }
+  .bnav-fixtures { -webkit-mask-image: url(assets/img/nav-fixtures.svg); mask-image: url(assets/img/nav-fixtures.svg); }
+  .bnav-teams    { -webkit-mask-image: url(assets/img/nav-teams.svg);    mask-image: url(assets/img/nav-teams.svg);    }
+  .bnav-bracket  { -webkit-mask-image: url(assets/img/nav-bracket.svg);  mask-image: url(assets/img/nav-bracket.svg);  }
+  .bnav-admin    { -webkit-mask-image: url(assets/img/nav-admin.svg);    mask-image: url(assets/img/nav-admin.svg);    }
 
   body { padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
 }
