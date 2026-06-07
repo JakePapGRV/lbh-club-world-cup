@@ -86,25 +86,35 @@ function koMatch(m) {
     </div>`;
 }
 export function renderBracket(b) {
+  const TABS = [
+    { stage: 'R32',   label: 'Rnd 32' },
+    { stage: 'R16',   label: 'Rnd 16' },
+    { stage: 'QF',    label: 'QF' },
+    { stage: 'SF',    label: 'SF' },
+    { stage: 'final', label: 'Final' },
+  ];
   return `
-  <h1>Knockout Bracket</h1>
-  ${b.hasAny
-    ? `<p class="hint">Advancing team highlighted. The name underneath each nation is the mate who owns it. Points: R32 = 1, R16 = 2, QF = 3, SF = 4, Final = 5.</p>`
-    : `<p class="hint">The knockout bracket fills in after the group stage (add knockout matches from the Admin page once they're known). The structure is shown below.</p>`}
-  <div class="bracket">
+  <div class="bracket-hdr">
+    <h1>Bracket</h1>
+    ${b.hasAny
+      ? `<p class="hint">Advancing team highlighted. Owner shown below. Points: R32=1, R16=2, QF=3, SF=4, Final=5.</p>`
+      : `<p class="hint">Bracket fills in after the group stage.</p>`}
+  </div>
+  <div class="bracket-page">
+    ${TABS.map((t, i) => `<input type="radio" name="bt" id="bt-${t.stage}" class="bt-input"${i === 0 ? ' checked' : ''}>`).join('')}
+    <div class="bracket-tabs">
+      ${TABS.map((t) => `<label for="bt-${t.stage}" class="bt-label">${t.label}</label>`).join('')}
+    </div>
     ${b.rounds.map((rd) => `
-      <div class="round">
-        <h3 class="round-label">${esc(rd.label)} <span class="round-pts">${rd.pts} pt${rd.pts > 1 ? 's' : ''}</span></h3>
+      <div class="bracket-panel" id="bp-${rd.stage}">
         <div class="round-matches">
           ${rd.matches.map(koMatch).join('')}
         </div>
+        ${rd.stage === 'final' && b.thirdPlace ? `
+          <p class="bracket-section-label">Third-place playoff <span class="round-pts">1 pt</span></p>
+          ${koMatch(b.thirdPlace)}` : ''}
       </div>`).join('')}
-  </div>
-  ${b.thirdPlace ? `
-    <div class="third-place">
-      <h3 class="round-label">Third-place playoff <span class="round-pts">1 pt</span></h3>
-      ${koMatch(b.thirdPlace)}
-    </div>` : ''}`;
+  </div>`;
 }
 
 // ----------------------------------------------------------------- Draft
