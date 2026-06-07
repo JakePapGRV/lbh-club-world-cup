@@ -93,6 +93,18 @@ function bkCol(matches, side) {
   }
   return html + `</div>`;
 }
+// Mobile bracket row: two feed matches on the left → one advance match on the right
+function mbRow(feed1, feed2, advance) {
+  return `
+  <div class="mb-section">
+    <div class="mb-pair">
+      <div class="mb-slot">${koMatch(feed1)}</div>
+      <div class="mb-slot">${koMatch(feed2)}</div>
+    </div>
+    <div class="mb-advance">${koMatch(advance)}</div>
+  </div>`;
+}
+
 export function renderBracket(b) {
   const [r32, r16, qf, sf, fin] = b.rounds.map(r => r.matches);
   const half = a => [a.slice(0, a.length / 2), a.slice(a.length / 2)];
@@ -100,7 +112,24 @@ export function renderBracket(b) {
   const [r16L, r16R] = half(r16);
   const [qfL,  qfR]  = half(qf);
   const [sfL,  sfR]  = half(sf);
-  const grid = ms => `<div class="bm-grid">${ms.map(koMatch).join('')}</div>`;
+
+  // R32 panel: 8 bracket rows [r32[i], r32[i+1]] → r16[i/2]
+  let r32html = '';
+  for (let i = 0; i < r32.length; i += 2) r32html += mbRow(r32[i], r32[i + 1], r16[i / 2]);
+
+  // R16 panel: 4 bracket rows [r16[i], r16[i+1]] → qf[i/2]
+  let r16html = '';
+  for (let i = 0; i < r16.length; i += 2) r16html += mbRow(r16[i], r16[i + 1], qf[i / 2]);
+
+  // QF–Final panel: QF pairs → SF, then SF pair → Final
+  const kohtml = `
+    <p class="bm-stage-lbl">Quarter-Finals → Semi-Finals <span class="round-pts">3 pts</span></p>
+    ${mbRow(qf[0], qf[1], sf[0])}
+    ${mbRow(qf[2], qf[3], sf[1])}
+    <p class="bm-stage-lbl">Semi-Finals → Final <span class="round-pts">4 pts</span></p>
+    ${mbRow(sf[0], sf[1], fin[0])}
+    ${b.thirdPlace ? `<p class="bm-stage-lbl">3rd Place <span class="round-pts">–</span></p><div class="mb-solo">${koMatch(b.thirdPlace)}</div>` : ''}`;
+
   return `
   <div class="bracket-hdr">
     <h1>Bracket</h1>
@@ -141,21 +170,13 @@ export function renderBracket(b) {
     <input type="radio" name="bm" id="bm-r16" class="bm-input">
     <input type="radio" name="bm" id="bm-ko"  class="bm-input">
     <div class="bm-tabs">
-      <label for="bm-r32" class="bm-label">Rnd 32</label>
-      <label for="bm-r16" class="bm-label">Rnd 16</label>
+      <label for="bm-r32" class="bm-label">R32</label>
+      <label for="bm-r16" class="bm-label">R16</label>
       <label for="bm-ko"  class="bm-label">QF–Final</label>
     </div>
-    <div class="bm-panel" id="bmp-r32">${grid(r32)}</div>
-    <div class="bm-panel" id="bmp-r16">${grid(r16)}</div>
-    <div class="bm-panel" id="bmp-ko">
-      <p class="bm-stage-lbl">Quarter Finals <span class="round-pts">3 pts</span></p>
-      ${grid(qf)}
-      <p class="bm-stage-lbl">Semi Finals <span class="round-pts">4 pts</span></p>
-      ${grid(sf)}
-      <p class="bm-stage-lbl">Final <span class="round-pts">5 pts</span></p>
-      ${koMatch(fin[0])}
-      ${b.thirdPlace ? `<p class="bm-stage-lbl">3rd Place</p>${koMatch(b.thirdPlace)}` : ''}
-    </div>
+    <div class="bm-panel" id="bmp-r32">${r32html}</div>
+    <div class="bm-panel" id="bmp-r16">${r16html}</div>
+    <div class="bm-panel" id="bmp-ko">${kohtml}</div>
   </div>`;
 }
 

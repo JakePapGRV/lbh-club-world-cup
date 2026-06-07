@@ -653,6 +653,55 @@ body[data-route="bracket"] .container { max-width:100%; padding-left:0; padding-
 }
 .bm-stage-lbl:first-child { margin-top:0; }
 
+/* ---- MOBILE BRACKET TREE rows ---- */
+.mb-section {
+  display: flex;
+  align-items: stretch;
+  margin-bottom: .55rem;
+}
+/* Left column: two feed match cards, stacked */
+.mb-pair {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  gap: .25rem;
+  position: relative;
+  padding-right: 10px;
+}
+/* Horizontal stub: each feed slot → connector */
+.mb-pair .mb-slot { position: relative; }
+.mb-pair .mb-slot::after {
+  content: ''; position: absolute;
+  right: -10px; top: 50%;
+  width: 10px; height: 1px;
+  background: var(--border-em);
+}
+/* Vertical connector between the two stubs */
+.mb-pair::after {
+  content: ''; position: absolute;
+  right: 0; top: 28%; bottom: 28%;
+  width: 1px; background: var(--border-em);
+}
+/* Right column: advance match, centred between the two feeds */
+.mb-advance {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding-left: 10px;
+  position: relative;
+}
+/* Horizontal stub: connector → advance match */
+.mb-advance::before {
+  content: ''; position: absolute;
+  left: 0; top: 50%;
+  width: 10px; height: 1px;
+  background: var(--border-em);
+}
+.mb-advance > .ko-match { width: 100%; }
+/* Solo match (3rd place / no pairing) */
+.mb-solo { margin-bottom: .55rem; }
+
 @media(max-width:999px) {
   .bkt-page { display:none; }
   .bkt-mobile { display:block; }
