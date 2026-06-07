@@ -721,9 +721,9 @@ body[data-route="bracket"] .container { max-width:100%; padding-left:0; padding-
     bottom: 0; left: 0; right: 0;
     align-items: center;
     justify-content: space-around;
-    background: #111111;
-    border-top: 1px solid rgba(255,255,255,.08);
-    height: calc(80px + env(safe-area-inset-bottom, 0px));
+    background: #000000;
+    border-top: none;
+    height: calc(104px + env(safe-area-inset-bottom, 0px));
     padding-bottom: env(safe-area-inset-bottom, 0px);
     z-index: 200;
     --bnav-icon-color: #F4FF7B;
@@ -731,11 +731,9 @@ body[data-route="bracket"] .container { max-width:100%; padding-left:0; padding-
   .bnav-item {
     display: flex; align-items: center; justify-content: center;
     width: 72px; height: 62px;
-    border-radius: 16px;
+    border-radius: 0;
     text-decoration: none;
-    transition: background .15s;
   }
-  .bnav-item.active { background: rgba(255,255,255,.10); }
   .bnav-icon {
     display: block;
     width: 44px; height: 34px;
@@ -743,7 +741,7 @@ body[data-route="bracket"] .container { max-width:100%; padding-left:0; padding-
     -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
     -webkit-mask-size: contain;     mask-size: contain;
     -webkit-mask-position: center;  mask-position: center;
-    opacity: .35;
+    opacity: .20;
     transition: opacity .15s;
   }
   .bnav-item.active .bnav-icon { opacity: 1; }
@@ -753,7 +751,7 @@ body[data-route="bracket"] .container { max-width:100%; padding-left:0; padding-
   .bnav-bracket  { -webkit-mask-image: url(assets/img/nav-bracket.svg);  mask-image: url(assets/img/nav-bracket.svg);  }
   .bnav-admin    { -webkit-mask-image: url(assets/img/nav-admin.svg);    mask-image: url(assets/img/nav-admin.svg);    }
 
-  body { padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
+  body { padding-bottom: calc(104px + env(safe-area-inset-bottom, 0px)); }
 }
 
 /* ============================================================
