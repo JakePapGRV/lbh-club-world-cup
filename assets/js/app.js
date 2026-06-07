@@ -2,8 +2,8 @@
 // Pages base path with no server rewrites.
 
 import { store } from './store.js?v=5';
-import { getLadder, getFixturesView, getBracket, getDraftState, getTeamsView, getPlayerView, getTeamView } from './compute.js?v=20';
-import { renderLadder, renderFixtures, renderBracket, renderDraft, renderAdmin, renderLogin, renderTeamsOverview, renderPlayerView, renderTeamView } from './views.js?v=20';
+import { getLadder, getFixturesView, getBracket, getDraftState, getTeamsView, getPlayerView, getTeamView } from './compute.js?v=21';
+import { renderLadder, renderFixtures, renderBracket, renderDraft, renderAdmin, renderLogin, renderTeamsOverview, renderPlayerView, renderTeamView } from './views.js?v=21';
 
 const root = document.getElementById('root');
 const PASSWORD = (window.LBH_CONFIG || {}).ADMIN_PASSWORD || 'admin';
@@ -51,7 +51,7 @@ function headerHtml(route) {
   return `
   <header class="topbar">
     <a class="brand" href="#/">
-      <img class="brand-logo-img" src="assets/img/logo.svg" alt="LBH Club World Cup Draft" width="80" height="36" />
+      <img class="brand-logo-img" src="assets/img/logo-black.svg" alt="LBH Club World Cup Draft" width="80" height="36" />
     </a>
     <nav class="topbar-nav">${links}${adminArea}</nav>
     <div class="topbar-end">
