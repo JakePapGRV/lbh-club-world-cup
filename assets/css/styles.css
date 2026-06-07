@@ -20,11 +20,11 @@
   --bg:       #ffffff;
   --bg-2:     #f4f4f5;
   --bg-3:     #e4e4e7;
-  --border:   rgba(0,0,0,0.08);
-  --border-em:rgba(0,0,0,0.14);
+  --border:   rgba(0,0,0,0.10);
+  --border-em:rgba(0,0,0,0.18);
   --text:     #111111;
-  --text-2:   rgba(0,0,0,0.55);
-  --text-3:   rgba(0,0,0,0.38);
+  --text-2:   rgba(0,0,0,0.65);
+  --text-3:   rgba(0,0,0,0.52);
   --red:      #e8351a;
   --r:        14px;
   --r-sm:     9px;
@@ -76,6 +76,18 @@ body[data-theme="dark"] code {
 body[data-theme="dark"] .teambtn .grp {
   background: rgba(255,255,255,.08);
 }
+
+/* ---- LIGHT MODE overrides ---- */
+body[data-theme="light"] .ko-match { background:#fff; border-color:rgba(0,0,0,.14); }
+body[data-theme="light"] .ko-side+.ko-side { border-top-color:rgba(0,0,0,.10); }
+body[data-theme="light"] .bm-tabs { background:#f0f0f1; border-bottom-color:rgba(0,0,0,.12); }
+body[data-theme="light"] .round-pts { color:#111; }
+body[data-theme="light"] .rosters .slot { color:#111; }
+body[data-theme="light"] button.primary { color:#111; }
+body[data-theme="light"] .players-list li { background:#e8e8ea; color:#111; }
+body[data-theme="light"] .hint { color:rgba(0,0,0,.58); }
+body[data-theme="light"] .ladder-header { color:rgba(0,0,0,.55); }
+body[data-theme="light"] .bm-label { color:rgba(0,0,0,.55); }
 
 /* ---- RESET ---- */
 *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
@@ -709,12 +721,12 @@ body[data-route="bracket"] .container { max-width:100%; padding-left:0; padding-
     bottom: 0; left: 0; right: 0;
     align-items: center;
     justify-content: space-around;
-    background: var(--h1-color);
-    border-top: 1px solid rgba(0,0,0,.12);
+    background: #111111;
+    border-top: 1px solid rgba(255,255,255,.08);
     height: calc(80px + env(safe-area-inset-bottom, 0px));
     padding-bottom: env(safe-area-inset-bottom, 0px);
     z-index: 200;
-    transition: background .4s ease;
+    --bnav-icon-color: #F4FF7B;
   }
   .bnav-item {
     display: flex; align-items: center; justify-content: center;
@@ -723,7 +735,7 @@ body[data-route="bracket"] .container { max-width:100%; padding-left:0; padding-
     text-decoration: none;
     transition: background .15s;
   }
-  .bnav-item.active { background: rgba(0,0,0,.12); }
+  .bnav-item.active { background: rgba(255,255,255,.10); }
   .bnav-icon {
     display: block;
     width: 44px; height: 34px;
