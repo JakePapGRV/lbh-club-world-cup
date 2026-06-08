@@ -3,7 +3,7 @@
 
 import { store } from './store.js?v=17';
 import { getLadder, getFixturesView, getBracket, getDraftState, getTeamsView, getPlayerView, getTeamView, getTipLadder, getTipsView } from './compute.js?v=19';
-import { renderLadder, renderFixtures, renderBracket, renderDraft, renderAdmin, renderLogin, renderTeamsOverview, renderPlayerView, renderTeamView, renderTips, renderIdentityGate } from './views.js?v=19';
+import { renderLadder, renderFixtures, renderBracket, renderDraft, renderAdmin, renderLogin, renderTeamsOverview, renderPlayerView, renderTeamView, renderTips, renderIdentityGate } from './views.js?v=35';
 
 const root = document.getElementById('root');
 const PASSWORD = (window.LBH_CONFIG || {}).ADMIN_PASSWORD || 'admin';
@@ -26,6 +26,8 @@ let draftMyTurn = false;   // set each draft render; pauses auto-refresh while y
 let flash = null;          // {notice} | {problem} consumed by the next admin render
 let loginError = null;
 let refreshTimer = null;
+let prevRoute = null;
+let lastRenderedRoute = null;
 
 const NAV = [
   { route: '/', label: 'Ladder', key: 'ladder' },
@@ -115,6 +117,11 @@ function paint(route, body) {
 
 async function render(opts = {}) {
   const route = currentRoute();
+  if (lastRenderedRoute !== route) {
+    prevRoute = lastRenderedRoute;
+    window.scrollTo(0, 0);
+  }
+  lastRenderedRoute = route;
   if (!root.querySelector('.topbar')) paint(route, `<p class="hint">Loading…</p>`);
 
   if (route === '/login') {
@@ -156,7 +163,8 @@ async function render(opts = {}) {
     body = renderPlayerView(getPlayerView(data, playerId));
   } else if (route.startsWith('/draft/team/')) {
     const teamId = Number(route.split('/')[3]);
-    body = renderTeamView(getTeamView(data, teamId));
+    const fromPlayer = prevRoute && prevRoute.startsWith('/draft/player/') ? prevRoute : null;
+    body = renderTeamView(getTeamView(data, teamId), fromPlayer);
   } else {
     switch (route) {
       case '/fixtures':

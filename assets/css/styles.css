@@ -47,7 +47,7 @@ body[data-route="ladder"]   { --h1-color:#8bffec; --nav-active-bg:#8bffec; --nav
 body[data-route="fixtures"] { --h1-color:#f4ff7b; --nav-active-bg:#f4ff7b; --nav-active-color:#202123; --hdr-text:rgba(32,33,35,.5);    --hdr-text-full:#202123; --hdr-hover-bg:rgba(0,0,0,.12);         --bnav-icon-color:#202123; }
 body[data-route="bracket"]  { --h1-color:#4d7cff; --nav-active-bg:#4d7cff; --nav-active-color:#fff;    --hdr-text:rgba(255,255,255,.55); --hdr-text-full:#fff;    --hdr-hover-bg:rgba(255,255,255,.13); --bnav-icon-color:#F4FF7B; }
 body[data-route="draft"]    { --h1-color:#ff4b2b; --nav-active-bg:#ff4b2b; --nav-active-color:#fff;    --hdr-text:rgba(255,255,255,.55); --hdr-text-full:#fff;    --hdr-hover-bg:rgba(255,255,255,.13); --bnav-icon-color:#F4FF7B; }
-body[data-route="tips"]     { --h1-color:#3ef0a0; --nav-active-bg:#3ef0a0; --nav-active-color:#1e1e1e; --hdr-text:rgba(30,30,30,.5);    --hdr-text-full:#1e1e1e; --hdr-hover-bg:rgba(0,0,0,.12);         --bnav-icon-color:#1e1e1e; }
+body[data-route="tips"]     { --h1-color:#A855F7; --nav-active-bg:#A855F7; --nav-active-color:#fff;    --hdr-text:rgba(255,255,255,.55); --hdr-text-full:#fff;    --hdr-hover-bg:rgba(255,255,255,.13); --bnav-icon-color:#F4FF7B; }
 body[data-route="admin"], body[data-route=""] { --h1-color:#9333EA; --nav-active-bg:#9333EA; --nav-active-color:#fff; --hdr-text:rgba(255,255,255,.55); --hdr-text-full:#fff; --hdr-hover-bg:rgba(255,255,255,.13); --bnav-icon-color:#F4FF7B; }
 
 
