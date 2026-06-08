@@ -28,6 +28,8 @@ let loginError = null;
 let refreshTimer = null;
 let prevRoute = null;
 let lastRenderedRoute = null;
+let lastPaintedRoute = null;
+let lastRenderedBody = null;
 
 const NAV = [
   { route: '/', label: 'Ladder', key: 'ladder' },
@@ -106,7 +108,17 @@ function paint(route, body) {
     if (el.dataset.group) openGroups.add(el.dataset.group);
   });
   document.body.dataset.route = routeKey || 'ladder';
-  root.innerHTML = headerHtml(route) + `<main class="container" id="app">${body}</main>`;
+  const appEl = document.getElementById('app');
+  if (appEl && lastPaintedRoute === route) {
+    if (body !== lastRenderedBody) {
+      appEl.innerHTML = body;
+      lastRenderedBody = body;
+    }
+  } else {
+    root.innerHTML = headerHtml(route) + `<main class="container" id="app">${body}</main>`;
+    lastPaintedRoute = route;
+    lastRenderedBody = body;
+  }
   // Restore open state on auto-refresh (skip on first load — let the smart default apply)
   if (hadAccordions && openGroups.size > 0) {
     document.querySelectorAll('.fxday').forEach(el => {
