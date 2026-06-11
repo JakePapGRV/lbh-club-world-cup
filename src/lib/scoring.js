@@ -34,6 +34,7 @@ const ownerOf = (ownership, teamId) =>
  */
 function winnerOf(fx) {
   if (fx.stage === 'group') {
+    if (fx.homeScore == null || fx.awayScore == null) return null;
     if (fx.homeScore === fx.awayScore) return null;
     return fx.homeScore > fx.awayScore ? fx.homeTeamId : fx.awayTeamId;
   }
@@ -61,6 +62,7 @@ export function scoreFixture(fx, { ownership, stagePoints = DEFAULT_STAGE_POINTS
   };
 
   const isGroup = fx.stage === 'group';
+  if (isGroup && (fx.homeScore == null || fx.awayScore == null)) return result;
   const drawn = isGroup && fx.homeScore === fx.awayScore;
   const winner = winnerOf(fx);
 

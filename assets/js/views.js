@@ -35,7 +35,7 @@ export function renderFixtures(groups) {
   if (!groups.length) return `<h1>Fixtures</h1><p class="hint">No fixtures yet.</p>`;
 
   const card = (f) => {
-    const scored = f.status === 'finished';
+    const scored = f.status === 'finished' && f.home_score != null && f.away_score != null;
     const sep = scored ? `${f.home_score}&ndash;${f.away_score}` : 'v';
     return `
     <div id="fx-${f.id}" class="fixture-card ${scored ? 'played' : ''}">
@@ -420,12 +420,13 @@ function fxPill(f) {
   const sn = (n) => n ? (n.length > 5 ? n.slice(0, 4) + '..' : n) : '—';
   const when = [f.short_date_label, f.time_label].filter(Boolean).join(' ');
   const owners = (f.home_owner || f.away_owner) ? `${sn(f.home_owner)} v ${sn(f.away_owner)}` : '';
+  const played = f.status === 'finished' && f.home_score != null && f.away_score != null;
   return `
-  <li class="fixture ${f.status === 'finished' ? 'played' : ''}">
+  <li class="fixture ${played ? 'played' : ''}">
     <span class="fx-when">${esc(when || 'TBC')}</span>
     <div class="fx-teams">
       <span class="fx-home">${esc(f.home_name || 'TBD')}</span>
-      <span class="fx-sep">${f.status === 'finished' ? `${f.home_score}&ndash;${f.away_score}` : 'v'}</span>
+      <span class="fx-sep">${played ? `${f.home_score}&ndash;${f.away_score}` : 'v'}</span>
       <span class="fx-away">${esc(f.away_name || 'TBD')}</span>
     </div>
     <span class="fx-owners">${esc(owners)}</span>

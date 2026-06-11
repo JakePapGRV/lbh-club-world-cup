@@ -3,7 +3,7 @@
 // rules engine (lib/scoring.js, lib/draft.js).
 
 import { buildPickSequence } from './lib/draft.js?v=2';
-import { computeLadder, DEFAULT_STAGE_POINTS } from './lib/scoring.js?v=2';
+import { computeLadder, DEFAULT_STAGE_POINTS } from './lib/scoring.js?v=3';
 import { TEAMS_PER_PLAYER } from './lib/teams.js?v=2';
 
 const DISPLAY_TZ = 'Australia/Sydney';
@@ -267,9 +267,10 @@ export function getTipLadder(data) {
   const stats = {};
   for (const p of data.players) stats[p.id] = { tipped: 0, points: 0 };
   for (const t of data.tips || []) {
-    if (!(t.fixture_id in outcomes)) continue; // match not finished yet
+    const outcome = outcomes[t.fixture_id];
+    if (outcome == null) continue; // match not finished, or finished without a usable result yet
     (stats[t.player_id] ||= { tipped: 0, points: 0 }).tipped += 1;
-    if (outcomes[t.fixture_id] != null && t.pick === outcomes[t.fixture_id]) stats[t.player_id].points += 1;
+    if (t.pick === outcome) stats[t.player_id].points += 1;
   }
 
   return [...data.players]

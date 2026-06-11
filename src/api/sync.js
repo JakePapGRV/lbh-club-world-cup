@@ -26,6 +26,19 @@ function winnerTeamId(match, homeId, awayId) {
 }
 
 /**
+ * A match the feed flags as finished is only really final once it carries a
+ * usable result. football-data can briefly report status FINISHED with a null
+ * full-time score. Treat such a match as still pending so we keep polling and
+ * record the score the moment it actually lands.
+ */
+function hasFinalResult(m) {
+  if (!m.finished) return false;
+  const scored = m.homeScore != null && m.awayScore != null;
+  const decided = m.winnerSide === 'HOME_TEAM' || m.winnerSide === 'AWAY_TEAM';
+  return scored || decided;
+}
+
+/**
  * Replace teams + fixtures with official data from normalised matches.
  * Only allowed before the draft starts (it wipes any picks). Run this once,
  * before drafting, when the real fixtures are published.
@@ -81,10 +94,10 @@ export async function importMatches(matches) {
           m.utcDate,
           homeId,
           awayId,
-          m.finished ? m.homeScore : null,
-          m.finished ? m.awayScore : null,
-          m.finished ? winnerTeamId(m, homeId, awayId) : null,
-          m.finished ? 'finished' : 'scheduled',
+          hasFinalResult(m) ? m.homeScore : null,
+          hasFinalResult(m) ? m.awayScore : null,
+          hasFinalResult(m) ? winnerTeamId(m, homeId, awayId) : null,
+          hasFinalResult(m) ? 'finished' : 'scheduled',
         ]
       );
     }
@@ -125,17 +138,17 @@ export async function syncScores(matches) {
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
         [
           m.apiId, m.stage, m.group, m.utcDate, homeId, awayId,
-          m.finished ? m.homeScore : null,
-          m.finished ? m.awayScore : null,
-          m.finished ? winnerTeamId(m, homeId, awayId) : null,
-          m.finished ? 'finished' : 'scheduled',
+          hasFinalResult(m) ? m.homeScore : null,
+          hasFinalResult(m) ? m.awayScore : null,
+          hasFinalResult(m) ? winnerTeamId(m, homeId, awayId) : null,
+          hasFinalResult(m) ? 'finished' : 'scheduled',
         ]
       );
       inserted += 1;
       continue;
     }
 
-    if (m.finished) {
+    if (hasFinalResult(m)) {
       await query(
         `UPDATE fixtures
             SET stage = $1, grp = $2, kickoff = $3, home_team_id = $4, away_team_id = $5,
