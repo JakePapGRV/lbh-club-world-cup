@@ -1038,26 +1038,15 @@ body[data-theme="dark"] .tip-chip.hit .tip-chip-pick { color:#3ef0a0; }
   color: #22c55e;
 }
 
+/* Fully-played day: stays in date order but fades back so the live day stands out */
+.fxday.done > summary { opacity: .5; }
+.fxday.done > summary:hover { opacity: .75; }
+
 .fxday-body {
   padding: .75rem;
   display: flex; flex-direction: column; gap: .5rem;
   border-top: 1px solid var(--border);
 }
-
-/* Past Results jump button */
-.fx-jump-btn {
-  display: inline-flex; align-items: center; gap: .3rem;
-  background: var(--bg-2); border: 1px solid var(--border-em);
-  border-radius: 999px; padding: .4rem 1rem;
-  font-family: var(--font); font-weight: 700; font-size: .78rem;
-  text-transform: uppercase; letter-spacing: .06em;
-  color: var(--text-2); cursor: pointer; margin-bottom: .75rem;
-  transition: color .15s;
-}
-.fx-jump-btn:hover { color: var(--text); }
-
-/* Results section at bottom of fixtures */
-.fx-results { margin-top: 1.5rem; }
 
 /* Fixture card — same gradient as branding, tall 3-row layout */
 .fixture-card {
