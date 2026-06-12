@@ -278,9 +278,9 @@ export function getTipLadder(data) {
     .sort((a, b) => b.points - a.points || b.tipped - a.tipped || a.name.localeCompare(b.name));
 }
 
-// Tipping page model. Splits matches into `toTip` (open — soonest first) and
-// `results` (kicked off or finished — most recent first), grouped by date like
-// the fixtures page. Each mate's pick is hidden from the others until kickoff:
+// Tipping page model. Splits matches into `toTip` (still tippable) and `results`
+// (locked or played), each grouped by date into day-block accordions like the
+// fixtures page. Each mate's pick is hidden from the others until kickoff:
 // `allTips` is only populated once a match is `locked`.
 export function getTipsView(data, myId) {
   const teamById = byId(data.teams);
@@ -318,14 +318,23 @@ export function getTipsView(data, myId) {
   };
 
   const all = [...data.fixtures].sort(fxSort).map(decorate);
+
+  // Group a flat fixture list into day blocks (one collapsible accordion each).
   const groupByDate = (list) => {
     const groups = {};
     for (const f of list) (groups[f.date_label] ||= []).push(f);
-    return Object.entries(groups).map(([title, items]) => ({ title, fixtures: items }));
+    return Object.entries(groups).map(([title, items]) => ({
+      title,
+      fixtures: items,
+      date_ts: items[0]?.kickoff ? Date.parse(items[0].kickoff) : null,
+      allPlayed: items.every((f) => f.status === 'finished'),
+    }));
   };
 
+  // `toTip` — still-tippable matches, soonest day first. `results` — locked or
+  // played matches, most recent day first. Both lay out as day-block accordions.
   return {
     toTip: groupByDate(all.filter((f) => !f.locked)),
-    results: groupByDate(all.filter((f) => f.locked).reverse()),
+    results: groupByDate(all.filter((f) => f.locked)).reverse(),
   };
 }

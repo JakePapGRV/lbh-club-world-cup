@@ -285,14 +285,32 @@ export function renderTips(ladder, view, myId) {
     </div>`;
   };
 
-  const groupSections = (groups, cardFn, emptyMsg) =>
-    groups.length
-      ? groups.map((g) => `
-        <section class="tip-group">
-          <h3 class="tip-date">${esc(g.title)}</h3>
-          ${g.fixtures.map(cardFn).join('')}
-        </section>`).join('')
-      : `<p class="hint">${esc(emptyMsg)}</p>`;
+  // Each match shows its tip buttons while open, or everyone's picks once locked.
+  const card = (f) => (f.locked ? resultCard(f) : tipCard(f));
+
+  const dayBadge = (g) => {
+    const total = g.fixtures.length;
+    if (g.allPlayed) return `<span class="fxday-badge done">All played</span>`;
+    const toTip = g.fixtures.filter((f) => !f.locked && !f.myPick).length;
+    if (toTip > 0) return `<span class="fxday-badge live">${toTip} to tip</span>`;
+    const played = g.fixtures.filter((f) => f.status === 'finished').length;
+    if (played > 0) return `<span class="fxday-badge">${played}/${total} played</span>`;
+    return `<span class="fxday-badge">${total} match${total !== 1 ? 'es' : ''}</span>`;
+  };
+
+  // openTitle = the one day that starts expanded in its section.
+  const renderDay = (g, openTitle) => `
+    <details class="fxday${g.allPlayed ? ' done' : ''}" data-group="${esc(g.title)}"${g.title === openTitle ? ' open' : ''}>
+      <summary class="fxday-header">
+        <span class="fxday-title">${esc(g.title)}</span>
+        ${dayBadge(g)}
+      </summary>
+      <div class="fxday-body">${g.fixtures.map(card).join('')}</div>
+    </details>`;
+
+  const section = (days, openTitle) => days.map((g) => renderDay(g, openTitle)).join('');
+  const toTipOpen = view.toTip[0] ? view.toTip[0].title : null;       // soonest day to tip
+  const resultsOpen = view.results[0] ? view.results[0].title : null; // most recent results day
 
   return `
   <h1>Tipping</h1>
@@ -302,9 +320,9 @@ export function renderTips(ladder, view, myId) {
 
   <h2 class="tip-section">To tip</h2>
   ${!me ? `<p class="hint">Tap <strong>Sign in</strong> (top-right) to choose your name and start tipping.</p>` : ''}
-  ${groupSections(view.toTip, tipCard, "You're all caught up — no matches left to tip.")}
+  ${view.toTip.length ? section(view.toTip, toTipOpen) : `<p class="hint">You're all caught up — no matches left to tip.</p>`}
 
-  ${view.results.length ? `<h2 class="tip-section">Results &amp; locked</h2>${groupSections(view.results, resultCard, '')}` : ''}
+  ${view.results.length ? `<h2 class="tip-section">Results</h2>${section(view.results, resultsOpen)}` : ''}
 
   <div class="view-btn-wrap"><a class="view-btn" href="#/">World Cup Draft →</a></div>`;
 }

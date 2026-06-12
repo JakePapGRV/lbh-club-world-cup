@@ -1037,10 +1037,19 @@ body[data-theme="dark"] .tip-chip.hit .tip-chip-pick { color:#3ef0a0; }
 .fxday-badge.done {
   color: #22c55e;
 }
+.fxday-badge.live {
+  color: var(--accent);
+}
+
+/* Tipping reuses the fixtures day-accordion; its cards space via the body's
+   flex gap, so drop the standalone card margin to avoid doubling up. */
+.fxday-body .tip-match { margin-bottom: 0; }
 
 /* Fully-played day: stays in date order but fades back so the live day stands out */
 .fxday.done > summary { opacity: .5; }
 .fxday.done > summary:hover { opacity: .75; }
+/* A done day that's been opened (e.g. the latest result) reads at full strength */
+.fxday.done[open] > summary { opacity: 1; }
 
 .fxday-body {
   padding: .75rem;
