@@ -2,8 +2,8 @@
 // Pages base path with no server rewrites.
 
 import { store } from './store.js?v=17';
-import { getLadder, getFixturesView, getBracket, getDraftState, getTeamsView, getPlayerView, getTeamView, getTipLadder, getTipsView } from './compute.js?v=21';
-import { renderLadder, renderFixtures, renderBracket, renderDraft, renderAdmin, renderLogin, renderTeamsOverview, renderPlayerView, renderTeamView, renderTips, renderIdentityGate } from './views.js?v=47';
+import { getLadder, getFixturesView, getBracket, getDraftState, getTeamsView, getPlayerView, getTeamView, getTipLadder, getTipsView, getGroupStandings } from './compute.js?v=22';
+import { renderLadder, renderFixtures, renderBracket, renderDraft, renderAdmin, renderLogin, renderTeamsOverview, renderPlayerView, renderTeamView, renderTips, renderIdentityGate } from './views.js?v=48';
 
 const root = document.getElementById('root');
 const PASSWORD = (window.LBH_CONFIG || {}).ADMIN_PASSWORD || 'admin';
@@ -215,7 +215,7 @@ async function render(opts = {}) {
         break;
       case '/':
       default:
-        body = renderLadder(getLadder(data));
+        body = renderLadder(getLadder(data), getGroupStandings(data));
     }
   }
   paint(route, body);
