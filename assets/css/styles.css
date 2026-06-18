@@ -1086,7 +1086,7 @@ body[data-theme="dark"] .tip-chip.hit .tip-chip-pick { color:#3ef0a0; }
 }
 .fxc-time {
   font-family: var(--font); font-weight: 800; font-size: .82rem;
-  color: #202123; letter-spacing: .04em;
+  color: #202123; letter-spacing: .04em; display:inline-flex; align-items:center;
 }
 .fxc-group {
   font-family: var(--font); font-weight: 700; font-size: .75rem;
