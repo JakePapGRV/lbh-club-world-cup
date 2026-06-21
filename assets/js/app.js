@@ -2,8 +2,8 @@
 // Pages base path with no server rewrites.
 
 import { store } from './store.js?v=17';
-import { getLadder, getFixturesView, getBracket, getDraftState, getTeamsView, getPlayerView, getTeamView, getTipLadder, getTipsView, getGroupStandings, getGroupPositions, resolveEspnSlot } from './compute.js?v=26';
-import { renderLadder, renderFixtures, renderBracket, renderDraft, renderAdmin, renderLogin, renderTeamsOverview, renderPlayerView, renderTeamView, renderTips, renderIdentityGate } from './views.js?v=51';
+import { getLadder, getFixturesView, getBracket, getDraftState, getTeamsView, getPlayerView, getTeamView, getGroupStandings, getGroupPositions, resolveEspnSlot } from './compute.js?v=26';
+import { renderLadder, renderFixtures, renderBracket, renderDraft, renderAdmin, renderLogin, renderTeamsOverview, renderPlayerView, renderTeamView, renderIdentityGate } from './views.js?v=51';
 
 const root = document.getElementById('root');
 const PASSWORD = (window.LBH_CONFIG || {}).ADMIN_PASSWORD || 'admin';
@@ -92,7 +92,6 @@ const NAV = [
   { route: '/fixtures', label: 'Fixtures', key: 'fixtures' },
   { route: '/bracket', label: 'Bracket', key: 'bracket' },
   { route: '/draft', label: 'Teams', key: 'draft' },
-  { route: '/tips', label: 'Tipping', key: 'tips' },
 ];
 
 function currentRoute() {
@@ -103,7 +102,6 @@ function activeKey(route) {
   if (route.startsWith('/fixtures')) return 'fixtures';
   if (route.startsWith('/bracket')) return 'bracket';
   if (route.startsWith('/draft')) return 'draft';
-  if (route.startsWith('/tips')) return 'tips';
   if (route.startsWith('/admin') || route.startsWith('/login')) return 'admin';
   return '';
 }
@@ -145,9 +143,6 @@ function headerHtml(route) {
     </a>
     <a href="#/bracket" class="bnav-item ${ak === 'bracket' ? 'active' : ''}" aria-label="Bracket">
       <span class="bnav-icon bnav-bracket"></span>
-    </a>
-    <a href="#/tips" class="bnav-item ${ak === 'tips' ? 'active' : ''}" aria-label="Tipping">
-      <span class="bnav-icon bnav-tips"></span>
     </a>
     <a href="${isAdmin ? '#/admin' : '#/login'}" class="bnav-item ${ak === 'admin' ? 'active' : ''}" aria-label="Admin">
       <span class="bnav-icon bnav-admin"></span>
@@ -238,28 +233,9 @@ async function render(opts = {}) {
       case '/fixtures':
         body = renderFixtures(getFixturesView(data));
         break;
-      case '/bracket': {
-        // ── BRACKET DIAGNOSTIC v55 ──────────────────────────────────────────
-        // Hardcoded slot 0 to test renderer independently of ESPN/Supabase/SW
-        console.log('BRACKET DEBUG: app version = 55-diag');
-        const diagOverlay = [{ home: 'South Korea', away: 'Switzerland' }];
-        const bracketData = getBracket(data, diagOverlay);
-        console.log('BRACKET DEBUG: slot 0 home_name =', bracketData.rounds[0]?.matches[0]?.home_name);
-        console.log('BRACKET DEBUG: slot 0 tbd =', bracketData.rounds[0]?.matches[0]?.tbd);
-        const diagBanner = [
-          '<div id="bracket-diag" style="',
-          'background:#ffdd00;color:#000;font-weight:700;font-size:15px;',
-          'padding:10px 16px;border:3px solid red;border-radius:6px;',
-          'margin:0 0 14px;text-align:center;line-height:1.5">',
-          'BRACKET DIAGNOSTIC v55 — CURRENT CODE IS RUNNING<br>',
-          'Slot 1 should show: <strong>South Korea</strong> vs <strong>Switzerland</strong>',
-          '</div>',
-        ].join('');
-        body = diagBanner + renderBracket(bracketData);
-        break;
-      }
-      case '/tips':
-        body = renderTips(getTipLadder(data), getTipsView(data, myId), myId);
+      case '/bracket':
+        if (!r32Overlay) await loadBracketOverlay();
+        body = renderBracket(getBracket(data, r32Overlay || []));
         break;
       case '/draft': {
         const ds = getDraftState(data);
@@ -337,7 +313,7 @@ function scrollToCurrentMatch(route) {
 // Ladder + fixtures refresh themselves so entered scores appear without a reload.
 function setAutoRefresh(route) {
   if (refreshTimer) { clearInterval(refreshTimer); refreshTimer = null; }
-  if (route === '/' || route === '/fixtures' || route === '/tips') {
+  if (route === '/' || route === '/fixtures') {
     refreshTimer = setInterval(() => { if (currentRoute() === route) render(); }, route === '/fixtures' ? 30000 : 60000);
   } else if (route === '/draft') {
     // Waiting players poll so picks appear live; the person mid-pick isn't yanked.
@@ -449,9 +425,6 @@ root.addEventListener('click', (e) => {
     render();
   } else if (action === 'draft-pick') {
     run(() => store.makePick(Number(el.dataset.teamId)));
-  } else if (action === 'tip') {
-    if (!myId) { window.alert('Pick your name first.'); return; }
-    run(() => store.saveTip(myId, Number(el.dataset.fixtureId), el.dataset.pick));
   } else if (action === 'del-fixture') {
     if (!window.confirm('Delete this knockout match?')) return;
     run(() => store.deleteFixture(Number(el.dataset.id)));
