@@ -239,20 +239,23 @@ async function render(opts = {}) {
         body = renderFixtures(getFixturesView(data));
         break;
       case '/bracket': {
-        // BRACKET DEBUG v54-diag: hardcoded overlay — proves renderer works independently of ESPN fetch
-        console.log('BRACKET DEBUG: app version = 54-diag');
-        console.log('BRACKET DEBUG: route/page loaded, building diagnostic overlay');
-        const diagOverlay = [
-          { home: 'South Korea', away: 'Switzerland' },  // slot 0 — hardcoded
-        ];
-        console.log('BRACKET DEBUG: bracket before overlay (DB fixtures):', data.fixtures.filter(f => f.stage === 'R32').length, 'R32 rows in DB');
+        // ── BRACKET DIAGNOSTIC v55 ──────────────────────────────────────────
+        // Hardcoded slot 0 to test renderer independently of ESPN/Supabase/SW
+        console.log('BRACKET DEBUG: app version = 55-diag');
+        const diagOverlay = [{ home: 'South Korea', away: 'Switzerland' }];
         const bracketData = getBracket(data, diagOverlay);
-        console.log('BRACKET DEBUG: bracket after overlay, slot 0 home_name =', bracketData.rounds[0]?.matches[0]?.home_name);
-        console.log('BRACKET DEBUG: slot 0 home_confirmed =', bracketData.rounds[0]?.matches[0]?.home_confirmed);
+        console.log('BRACKET DEBUG: slot 0 home_name =', bracketData.rounds[0]?.matches[0]?.home_name);
         console.log('BRACKET DEBUG: slot 0 tbd =', bracketData.rounds[0]?.matches[0]?.tbd);
-        body = renderBracket(bracketData);
-        const slot0Html = body.slice(body.indexOf('ko-match'), body.indexOf('ko-match') + 300);
-        console.log('BRACKET DEBUG: final HTML slot 0 snippet =', slot0Html);
+        const diagBanner = [
+          '<div id="bracket-diag" style="',
+          'background:#ffdd00;color:#000;font-weight:700;font-size:15px;',
+          'padding:10px 16px;border:3px solid red;border-radius:6px;',
+          'margin:0 0 14px;text-align:center;line-height:1.5">',
+          'BRACKET DIAGNOSTIC v55 — CURRENT CODE IS RUNNING<br>',
+          'Slot 1 should show: <strong>South Korea</strong> vs <strong>Switzerland</strong>',
+          '</div>',
+        ].join('');
+        body = diagBanner + renderBracket(bracketData);
         break;
       }
       case '/tips':
