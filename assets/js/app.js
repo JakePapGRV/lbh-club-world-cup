@@ -2,8 +2,8 @@
 // Pages base path with no server rewrites.
 
 import { store } from './store.js?v=17';
-import { getLadder, getFixturesView, getBracket, getDraftState, getTeamsView, getPlayerView, getTeamView, getTipLadder, getTipsView, getGroupStandings } from './compute.js?v=22';
-import { renderLadder, renderFixtures, renderBracket, renderDraft, renderAdmin, renderLogin, renderTeamsOverview, renderPlayerView, renderTeamView, renderTips, renderIdentityGate } from './views.js?v=48';
+import { getLadder, getFixturesView, getBracket, getDraftState, getTeamsView, getPlayerView, getTeamView, getTipLadder, getTipsView, getGroupStandings, getQualifiers } from './compute.js?v=23';
+import { renderLadder, renderFixtures, renderBracket, renderDraft, renderAdmin, renderLogin, renderTeamsOverview, renderPlayerView, renderTeamView, renderTips, renderIdentityGate } from './views.js?v=49';
 
 const root = document.getElementById('root');
 const PASSWORD = (window.LBH_CONFIG || {}).ADMIN_PASSWORD || 'admin';
@@ -27,6 +27,7 @@ let flash = null;          // {notice} | {problem} consumed by the next admin re
 let loginError = null;
 let refreshTimer = null;
 let prevRoute = null;
+let espnStandings = null;
 let lastRenderedRoute = null;
 let lastPaintedRoute = null;
 let lastRenderedBody = null;
@@ -183,7 +184,13 @@ async function render(opts = {}) {
         body = renderFixtures(getFixturesView(data));
         break;
       case '/bracket':
-        body = renderBracket(getBracket(data));
+        body = renderBracket(getBracket(data), getQualifiers(data, espnStandings));
+        if (!espnStandings) {
+          fetch('https://site.api.espn.com/apis/v2/sports/soccer/fifa.world/standings?season=2026')
+            .then((r) => r.ok ? r.json() : null)
+            .catch(() => null)
+            .then((s) => { if (s) { espnStandings = s; if (currentRoute() === '/bracket') render('/bracket'); } });
+        }
         break;
       case '/tips':
         body = renderTips(getTipLadder(data), getTipsView(data, myId), myId);
