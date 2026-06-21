@@ -238,11 +238,23 @@ async function render(opts = {}) {
       case '/fixtures':
         body = renderFixtures(getFixturesView(data));
         break;
-      case '/bracket':
-        if (!r32Overlay) await loadBracketOverlay();
-        console.log('[bracket] rendering with overlay:', r32Overlay ? r32Overlay.length + ' slots' : 'null (all TBD)');
-        body = renderBracket(getBracket(data, r32Overlay || []));
+      case '/bracket': {
+        // BRACKET DEBUG v54-diag: hardcoded overlay — proves renderer works independently of ESPN fetch
+        console.log('BRACKET DEBUG: app version = 54-diag');
+        console.log('BRACKET DEBUG: route/page loaded, building diagnostic overlay');
+        const diagOverlay = [
+          { home: 'South Korea', away: 'Switzerland' },  // slot 0 — hardcoded
+        ];
+        console.log('BRACKET DEBUG: bracket before overlay (DB fixtures):', data.fixtures.filter(f => f.stage === 'R32').length, 'R32 rows in DB');
+        const bracketData = getBracket(data, diagOverlay);
+        console.log('BRACKET DEBUG: bracket after overlay, slot 0 home_name =', bracketData.rounds[0]?.matches[0]?.home_name);
+        console.log('BRACKET DEBUG: slot 0 home_confirmed =', bracketData.rounds[0]?.matches[0]?.home_confirmed);
+        console.log('BRACKET DEBUG: slot 0 tbd =', bracketData.rounds[0]?.matches[0]?.tbd);
+        body = renderBracket(bracketData);
+        const slot0Html = body.slice(body.indexOf('ko-match'), body.indexOf('ko-match') + 300);
+        console.log('BRACKET DEBUG: final HTML slot 0 snippet =', slot0Html);
         break;
+      }
       case '/tips':
         body = renderTips(getTipLadder(data), getTipsView(data, myId), myId);
         break;
