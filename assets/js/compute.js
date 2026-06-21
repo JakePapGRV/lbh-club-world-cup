@@ -457,16 +457,16 @@ const SLUG_TO_STAGE_ESPN = {
 export function getGroupPositions(standings) {
   const positions = {};
   for (const group of (standings?.children || [])) {
-    const qualified = (group.standings?.entries || [])
-      .filter((e) => e.note?.description === 'Advance to Round of 32')
-      .map((e) => ({
-        name: STANDINGS_NAME_MAP[e.team?.displayName] || e.team?.displayName || '',
-        pts: (e.stats?.find((s) => s.name === 'points')?.value) ?? 0,
-        gd:  (e.stats?.find((s) => s.name === 'pointDifferential')?.value) ?? 0,
-        gf:  (e.stats?.find((s) => s.name === 'pointsFor')?.value) ?? 0,
-      }))
-      .sort((a, b) => b.pts - a.pts || b.gd - a.gd || b.gf - a.gf);
-    if (qualified.length >= 1) positions[group.name] = { winner: qualified[0].name, runnerUp: qualified[1]?.name || null };
+    let winner = null, runnerUp = null;
+    for (const e of (group.standings?.entries || [])) {
+      if (e.note?.description !== 'Advance to Round of 32') continue;
+      const rank = e.stats?.find((s) => s.name === 'rank')?.value;
+      const espnName = e.team?.displayName || '';
+      const name = STANDINGS_NAME_MAP[espnName] || espnName;
+      if (rank === 1) winner = name;
+      else if (rank === 2) runnerUp = name;
+    }
+    if (winner) positions[group.name] = { winner, runnerUp };
   }
   return positions; // { "Group A": { winner: "Mexico", runnerUp: "South Korea" }, … }
 }
