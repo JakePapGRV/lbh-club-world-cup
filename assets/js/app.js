@@ -2,7 +2,7 @@
 // Pages base path with no server rewrites.
 
 import { store } from './store.js?v=17';
-import { getLadder, getFixturesView, getBracket, getDraftState, getTeamsView, getPlayerView, getTeamView, getTipLadder, getTipsView, getGroupStandings, getGroupPositions, resolveEspnSlot } from './compute.js?v=25';
+import { getLadder, getFixturesView, getBracket, getDraftState, getTeamsView, getPlayerView, getTeamView, getTipLadder, getTipsView, getGroupStandings, getGroupPositions, resolveEspnSlot } from './compute.js?v=26';
 import { renderLadder, renderFixtures, renderBracket, renderDraft, renderAdmin, renderLogin, renderTeamsOverview, renderPlayerView, renderTeamView, renderTips, renderIdentityGate } from './views.js?v=51';
 
 const root = document.getElementById('root');
@@ -36,13 +36,28 @@ const ESPN_STANDINGS_URL = 'https://site.api.espn.com/apis/v2/sports/soccer/fifa
 
 async function loadBracketOverlay() {
   if (r32Overlay) return;
+  console.log('[bracket] loadBracketOverlay: start');
+  console.log('[bracket] standings URL:', ESPN_STANDINGS_URL);
+  console.log('[bracket] scoreboard dates:', ESPN_R32_DATES.join(', '));
   try {
     const [standingsResp, ...sbResps] = await Promise.all([
-      fetch(ESPN_STANDINGS_URL).then((r) => r.ok ? r.json() : null).catch(() => null),
-      ...ESPN_R32_DATES.map((d) => fetch(ESPN_SB + d).then((r) => r.ok ? r.json() : null).catch(() => null)),
+      fetch(ESPN_STANDINGS_URL)
+        .then((r) => { console.log('[bracket] standings HTTP', r.status); return r.ok ? r.json() : null; })
+        .catch((err) => { console.warn('[bracket] standings fetch error:', err); return null; }),
+      ...ESPN_R32_DATES.map((d) =>
+        fetch(ESPN_SB + d)
+          .then((r) => r.ok ? r.json() : null)
+          .catch((err) => { console.warn('[bracket] scoreboard fetch error ' + d + ':', err); return null; })
+      ),
     ]);
+
+    console.log('[bracket] standings groups:', standingsResp?.children?.length ?? 'null (fetch failed)');
+    const r32EventCount = sbResps.reduce((n, sb) => n + (sb?.events?.filter(e => e.season?.slug === 'round-of-32').length ?? 0), 0);
+    console.log('[bracket] R32 events found across all dates:', r32EventCount);
+
     espnStandings = standingsResp;
     const groupPos = getGroupPositions(espnStandings);
+    console.log('[bracket] group positions:', JSON.stringify(groupPos));
 
     const seen = new Set();
     const matches = [];
@@ -57,11 +72,14 @@ async function loadBracketOverlay() {
         const homeName = resolveEspnSlot(home?.team?.displayName, groupPos);
         const awayName = resolveEspnSlot(away?.team?.displayName, groupPos);
         matches.push({ home: homeName, away: awayName });
+        console.log('[bracket] slot', matches.length, '|', home?.team?.displayName, '->', homeName ?? 'TBD', '|', away?.team?.displayName, '->', awayName ?? 'TBD');
       }
     }
+
+    console.log('[bracket] overlay complete:', matches.length, 'slots,', matches.filter(m => m.home || m.away).length, 'with ≥1 confirmed team');
     r32Overlay = matches.length > 0 ? matches : null;
   } catch (err) {
-    console.error('loadBracketOverlay failed:', err);
+    console.error('[bracket] loadBracketOverlay FAILED:', err);
     r32Overlay = null;
   }
 }
@@ -222,6 +240,7 @@ async function render(opts = {}) {
         break;
       case '/bracket':
         if (!r32Overlay) await loadBracketOverlay();
+        console.log('[bracket] rendering with overlay:', r32Overlay ? r32Overlay.length + ' slots' : 'null (all TBD)');
         body = renderBracket(getBracket(data, r32Overlay || []));
         break;
       case '/tips':
