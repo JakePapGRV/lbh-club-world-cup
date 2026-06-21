@@ -385,3 +385,40 @@ export function getTipsView(data, myId) {
     results: groupByDate(all.filter((f) => f.locked)).reverse(),
   };
 }
+
+const STANDINGS_NAME_MAP = {
+  'Czechia': 'Czech Republic',
+  'Bosnia-Herzegovina': 'Bosnia and Herzegovina',
+  'Bosnia & Herzegovina': 'Bosnia and Herzegovina',
+  'Congo DR': 'DR Congo',
+  'DRC': 'DR Congo',
+  'Türkiye': 'Turkey',
+  'Korea Republic': 'South Korea',
+  "Côte d'Ivoire": 'Ivory Coast',
+  "Cote d'Ivoire": 'Ivory Coast',
+};
+
+export function getQualifiers(data, standings) {
+  if (!standings || !standings.children) return { qualified: [], possible: [] };
+
+  const teamByName = new Map(data.teams.map((t) => [t.name.toLowerCase(), t]));
+  const playerById = Object.fromEntries(data.players.map((p) => [p.id, p]));
+  const ownerByTeamId = Object.fromEntries(data.picks.map((pk) => [pk.team_id, playerById[pk.player_id]?.name || null]));
+
+  const qualified = [];
+  const possible = [];
+
+  for (const group of standings.children) {
+    for (const entry of group.standings?.entries || []) {
+      const espnName = entry.team?.displayName || '';
+      const name = STANDINGS_NAME_MAP[espnName] || espnName;
+      const note = entry.note?.description || '';
+      const team = teamByName.get(name.toLowerCase());
+      const owner = team ? (ownerByTeamId[team.id] || null) : null;
+      if (note === 'Advance to Round of 32') qualified.push({ name, group: group.name, owner });
+      else if (note === 'Best 8 advance') possible.push({ name, group: group.name, owner });
+    }
+  }
+
+  return { qualified, possible };
+}
