@@ -461,18 +461,29 @@ const SLUG_TO_STAGE_ESPN = {
 export function getGroupPositions(standings) {
   const positions = {};
   for (const group of (standings?.children || [])) {
+    const entries = group.standings?.entries || [];
+    // Group is complete when every team has played all 3 games
+    const groupComplete = entries.length > 0 && entries.every((e) => {
+      const gp = e.stats?.find((s) => s.name === 'gamesPlayed')?.value ?? 0;
+      return gp >= 3;
+    });
     let winner = null, runnerUp = null;
-    for (const e of (group.standings?.entries || [])) {
+    for (const e of entries) {
       if (e.note?.description !== 'Advance to Round of 32') continue;
-      const rank = e.stats?.find((s) => s.name === 'rank')?.value;
+      const rank  = e.stats?.find((s) => s.name === 'rank')?.value;
+      const pts   = e.stats?.find((s) => s.name === 'points')?.value ?? 0;
+      const gp    = e.stats?.find((s) => s.name === 'gamesPlayed')?.value ?? 0;
+      // Only resolve if mathematically confirmed: group done, OR 6+ pts with 2+ games played
+      // (6 pts after 2 games in a 4-team group guarantees top-2 regardless of remaining result)
+      if (!groupComplete && !(gp >= 2 && pts >= 6)) continue;
       const espnName = e.team?.displayName || '';
       const name = STANDINGS_NAME_MAP[espnName] || espnName;
       if (rank === 1) winner = name;
       else if (rank === 2) runnerUp = name;
     }
-    if (winner) positions[group.name] = { winner, runnerUp };
+    if (winner || runnerUp) positions[group.name] = { winner, runnerUp };
   }
-  return positions; // { "Group A": { winner: "Mexico", runnerUp: "South Korea" }, … }
+  return positions;
 }
 
 /**
