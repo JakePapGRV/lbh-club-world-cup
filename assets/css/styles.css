@@ -132,7 +132,7 @@ a:hover { text-decoration: underline; }
 /* ---- SPLASH / LOADING SCREEN ---- */
 #splash {
   position: fixed; inset: 0; z-index: 9999;
-  background: #000;
+  background: #328fff;
   overflow: hidden;
   transition: opacity 0.6s ease;
 }
@@ -142,7 +142,7 @@ a:hover { text-decoration: underline; }
   position: absolute;
   inset: 0;
   z-index: 0;
-  background: rgba(0, 0, 0, 0.35);
+  background: transparent;
   pointer-events: none;
 }
 #splash::before {
@@ -150,7 +150,7 @@ a:hover { text-decoration: underline; }
   position: absolute;
   inset: 0;
   z-index: 0;
-  background: url('../img/splash-bg-tiles.svg') top center / 100% auto repeat-y;
+  background: url('../img/loading-bg-messi.png') center/cover no-repeat;
   opacity: 0;
   animation: splash-img-in 0.5s ease-out forwards;
   pointer-events: none;
@@ -177,7 +177,7 @@ a:hover { text-decoration: underline; }
 }
 .splash-bar {
   height: 100%; border-radius: 999px;
-  background: linear-gradient(90deg, #FF0000, #FFFFFF);
+  background: linear-gradient(90deg, #111A7B, #FFFFFF);
   transform: scaleX(0); transform-origin: left;
   animation: splash-load 4s cubic-bezier(.4,0,.2,1) forwards;
 }
