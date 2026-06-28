@@ -3,7 +3,7 @@
 
 import { store } from './store.js?v=17';
 import { getLadder, getFixturesView, getBracket, getDraftState, getTeamsView, getPlayerView, getTeamView, getTipLadder, getTipsView, getGroupStandings, getGroupPositions, resolveEspnSlot } from './compute.js?v=28';
-import { renderLadder, renderFixtures, renderBracket, renderDraft, renderAdmin, renderLogin, renderTeamsOverview, renderPlayerView, renderTeamView, renderTips, renderIdentityGate } from './views.js?v=53';
+import { renderLadder, renderFixtures, renderBracket, renderDraft, renderAdmin, renderLogin, renderTeamsOverview, renderPlayerView, renderTeamView, renderTips, renderIdentityGate } from './views.js?v=54';
 
 const root = document.getElementById('root');
 
@@ -328,8 +328,11 @@ async function render(opts = {}) {
         }
         break;
       case '/':
-      default:
-        body = renderLadder(getLadder(data), getGroupStandings(data));
+      default: {
+        if (!r32Overlay) await loadBracketOverlay();
+        const ladderClocks = await fetchFixtureClocks().catch(() => ({}));
+        body = renderLadder(getLadder(data), getGroupStandings(data), getBracket(data, r32Overlay || []), ladderClocks);
+      }
     }
   }
   paint(route, body);
