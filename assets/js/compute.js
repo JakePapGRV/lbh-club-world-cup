@@ -513,22 +513,21 @@ export function getGroupPositions(standings) {
       const gp = e.stats?.find((s) => s.name === 'gamesPlayed')?.value ?? 0;
       return gp >= 3;
     });
-    const qualified = entries
-      .filter((e) => {
-        if (e.note?.description !== 'Advance to Round of 32') return false;
-        const pts = e.stats?.find((s) => s.name === 'points')?.value ?? 0;
-        const gp  = e.stats?.find((s) => s.name === 'gamesPlayed')?.value ?? 0;
-        // Only confirmed: group complete, OR 6+ pts with 2+ games (mathematically guaranteed top-2)
-        return groupComplete || (gp >= 2 && pts >= 6);
-      })
-      .map((e) => ({
-        name: STANDINGS_NAME_MAP[e.team?.displayName] || e.team?.displayName || '',
-        pts: (e.stats?.find((s) => s.name === 'points')?.value) ?? 0,
-        gd:  (e.stats?.find((s) => s.name === 'pointDifferential')?.value) ?? 0,
-        gf:  (e.stats?.find((s) => s.name === 'pointsFor')?.value) ?? 0,
-      }))
-      .sort((a, b) => b.pts - a.pts || b.gd - a.gd || b.gf - a.gf);
-    if (qualified.length >= 1) positions[group.name] = { winner: qualified[0].name, runnerUp: qualified[1]?.name || null };
+    let winner = null, runnerUp = null;
+    for (const e of entries) {
+      if (e.note?.description !== 'Advance to Round of 32') continue;
+      const rank  = e.stats?.find((s) => s.name === 'rank')?.value;
+      const pts   = e.stats?.find((s) => s.name === 'points')?.value ?? 0;
+      const gp    = e.stats?.find((s) => s.name === 'gamesPlayed')?.value ?? 0;
+      // Only resolve if mathematically confirmed: group done, OR 6+ pts with 2+ games played
+      // (6 pts after 2 games in a 4-team group guarantees top-2 regardless of remaining result)
+      if (!groupComplete && !(gp >= 2 && pts >= 6)) continue;
+      const espnName = e.team?.displayName || '';
+      const name = STANDINGS_NAME_MAP[espnName] || espnName;
+      if (rank === 1) winner = name;
+      else if (rank === 2) runnerUp = name;
+    }
+    if (winner || runnerUp) positions[group.name] = { winner, runnerUp };
   }
   return positions;
 }
