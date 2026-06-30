@@ -438,7 +438,14 @@ export function getTipsView(data, myId) {
     };
   };
 
-  const all = [...data.fixtures].sort(fxSort).map(decorate);
+  const r32RealKickoffs = new Set(
+    data.fixtures
+      .filter(f => f.stage === 'R32' && (f.home_team_id != null || f.away_team_id != null) && f.kickoff)
+      .map(f => f.kickoff)
+  );
+  const all = [...data.fixtures]
+    .filter(f => !(f.stage === 'R32' && f.home_team_id == null && f.away_team_id == null && r32RealKickoffs.has(f.kickoff)))
+    .sort(fxSort).map(decorate);
 
   // Group a flat fixture list into day blocks (one collapsible accordion each).
   const groupByDate = (list) => {
