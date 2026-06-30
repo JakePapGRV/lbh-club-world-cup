@@ -212,7 +212,7 @@ export function getBracket(data, r32Overlay = []) {
       ? (byStage['R32'] || [])
           .filter((m) => m.home_name != null || m.away_name != null)
           .sort((a, b) => (a.bracket_pos ?? 999) - (b.bracket_pos ?? 999))
-      : (byStage[rd.stage] || []).filter((m) => m.home_name != null || m.away_name != null);
+      : (byStage[rd.stage] || []).slice();
 
     // Build set of team names already covered by real DB fixtures, then walk the overlay
     // sequentially skipping any entry whose teams are already represented — this prevents
