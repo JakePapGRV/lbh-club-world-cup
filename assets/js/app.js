@@ -3,7 +3,7 @@
 
 import { store } from './store.js?v=17';
 import { getLadder, getFixturesView, getBracket, getDraftState, getTeamsView, getPlayerView, getTeamView, getTipLadder, getTipsView, getGroupStandings, getGroupPositions, resolveEspnSlot } from './compute.js?v=36';
-import { renderLadder, renderFixtures, renderBracket, renderDraft, renderAdmin, renderLogin, renderTeamsOverview, renderPlayerView, renderTeamView, renderTips, renderIdentityGate } from './views.js?v=57';
+import { renderLadder, renderFixtures, renderBracket, renderDraft, renderAdmin, renderLogin, renderTeamsOverview, renderPlayerView, renderTeamView, renderTips, renderIdentityGate } from './views.js?v=58';
 
 const root = document.getElementById('root');
 
@@ -312,6 +312,14 @@ async function render(opts = {}) {
       case '/tips':
         body = renderTips(getTipLadder(data), getTipsView(data, myId), myId);
         break;
+      case '/bracket-test': {
+        // Hidden experimental bracket prototype — reachable only by typing the
+        // URL; deliberately absent from NAV/bottom-nav. Lazy import so normal
+        // visitors never download it.
+        const bt = await import('./bracket-test.js?v=4');
+        body = await bt.renderBracketTestPage(data);
+        break;
+      }
       case '/admin':
         if (!isAdmin) { body = renderLogin(loginError); loginError = null; }
         else {
@@ -329,9 +337,14 @@ async function render(opts = {}) {
         break;
       case '/':
       default: {
-        if (!r32Overlay) await loadBracketOverlay();
-        const ladderClocks = await fetchFixtureClocks().catch(() => ({}));
-        body = renderLadder(getLadder(data), getGroupStandings(data), getBracket(data, r32Overlay || []), ladderClocks);
+        // Radial bracket under the ladder (same module as #/bracket-test).
+        // On any failure the ladder still renders, just without the bracket.
+        let radialHtml = '';
+        try {
+          const bt = await import('./bracket-test.js?v=4');
+          radialHtml = await bt.renderLadderRadial(data);
+        } catch (err) { console.error('ladder bracket failed:', err); }
+        body = renderLadder(getLadder(data), getGroupStandings(data), radialHtml);
       }
     }
   }
@@ -381,7 +394,7 @@ function scrollToCurrentMatch(route) {
 // Ladder + fixtures refresh themselves so entered scores appear without a reload.
 function setAutoRefresh(route) {
   if (refreshTimer) { clearInterval(refreshTimer); refreshTimer = null; }
-  if (route === '/' || route === '/fixtures' || route === '/tips') {
+  if (route === '/' || route === '/fixtures' || route === '/tips' || route === '/bracket-test') {
     refreshTimer = setInterval(() => { if (currentRoute() === route) render(); }, route === '/fixtures' ? 30000 : 60000);
   } else if (route === '/draft') {
     // Waiting players poll so picks appear live; the person mid-pick isn't yanked.
