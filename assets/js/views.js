@@ -115,7 +115,7 @@ export function renderLadder(ladder, groups = [], bracketHtml = null, clocks = {
         <span class="ladder-pts">${p.points}</span>
       </a>`).join('')}
   </div>
-  <p class="hint" style="margin-top:1rem">"Teams left" counts only your drafted nations still in the tournament. Points: group win = 1, draw = 0.5. Knockouts: R32 = 1, R16 = 1, QF/SF/Final = 2. Own both teams in a match? Any decisive result scores the full win, a draw scores 0.5.</p>
+  <p class="hint" style="margin-top:1rem">"Teams left" counts only your drafted nations still in the tournament. Points: group win = 1, draw = 0.5. Knockouts: R32 = 1, R16 onwards = 2. Own both teams in a match? Any decisive result scores the full win, a draw scores 0.5.</p>
   <div class="view-btn-wrap"><a class="view-btn" href="#/fixtures">View Fixtures</a></div>
   ${bracketHtml || ''}
   ${wcBlock}`;
@@ -280,7 +280,7 @@ export function renderBracket(b) {
   <div class="bracket-hdr">
     <h1>Bracket</h1>
     ${b.hasAny
-      ? `<p class="hint">Advancing team highlighted. Points: R32=1, R16=1, QF/SF/Final=2.</p>`
+      ? `<p class="hint">Advancing team highlighted. Points: R32=1, R16 onwards=2.</p>`
       : `<p class="hint">Bracket fills in after the group stage.</p>`}
   </div>
   <div class="bkt-page">
