@@ -2,7 +2,7 @@
 //
 // Rules encoded here:
 //   - Group stage:  win = 1, draw = 0.5, loss = 0.
-//   - Knockout win points: R32 = 1, R16 = 1, QF = 2, SF = 2, Final = 2.
+//   - Knockout win points: R32 = 1, then R16/QF/SF/Final = 2.
 //   - Knockouts decided by penalties: the advancing team takes the FULL win
 //     points (there is no 0.5 outside the group stage).
 //   - Third-place playoff: scored as a 1-point win (configurable on/off).
@@ -16,7 +16,7 @@ export const STAGES = ['group', 'R32', 'R16', 'QF', 'SF', 'third', 'final'];
 export const DEFAULT_STAGE_POINTS = {
   group: 1,
   R32: 1,
-  R16: 1,
+  R16: 2,
   QF: 2,
   SF: 2,
   third: 1, // third-place playoff scored as a 1-point win
