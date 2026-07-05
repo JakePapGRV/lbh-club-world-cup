@@ -3,7 +3,7 @@
 // rules engine (lib/scoring.js, lib/draft.js).
 
 import { buildPickSequence } from './lib/draft.js?v=2';
-import { computeLadder, DEFAULT_STAGE_POINTS } from './lib/scoring.js?v=3';
+import { computeLadder, DEFAULT_STAGE_POINTS } from './lib/scoring.js?v=4';
 import { TEAMS_PER_PLAYER } from './lib/teams.js?v=2';
 
 const DISPLAY_TZ = 'Australia/Sydney';
@@ -190,10 +190,10 @@ export function getFixturesView(data) {
 
 const KO_ROUNDS = [
   { stage: 'R32', label: 'Round of 32', expected: 16, pts: 1 },
-  { stage: 'R16', label: 'Round of 16', expected: 8, pts: 2 },
-  { stage: 'QF', label: 'Quarter-finals', expected: 4, pts: 3 },
-  { stage: 'SF', label: 'Semi-finals', expected: 2, pts: 4 },
-  { stage: 'final', label: 'Final', expected: 1, pts: 5 },
+  { stage: 'R16', label: 'Round of 16', expected: 8, pts: 1 },
+  { stage: 'QF', label: 'Quarter-finals', expected: 4, pts: 2 },
+  { stage: 'SF', label: 'Semi-finals', expected: 2, pts: 2 },
+  { stage: 'final', label: 'Final', expected: 1, pts: 2 },
 ];
 
 export function getBracket(data, r32Overlay = []) {
