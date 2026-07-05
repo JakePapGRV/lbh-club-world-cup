@@ -115,7 +115,7 @@ export function renderLadder(ladder, groups = [], bracketHtml = null, clocks = {
         <span class="ladder-pts">${p.points}</span>
       </a>`).join('')}
   </div>
-  <p class="hint" style="margin-top:1rem">"Teams left" counts only your drafted nations still in the tournament. Points: group win = 1, draw = 0.5. Knockouts: R32 = 1, R16 = 2, QF = 3, SF = 4, Final = 5. Own both teams in a match? Any decisive result scores the full win, a draw scores 0.5.</p>
+  <p class="hint" style="margin-top:1rem">"Teams left" counts only your drafted nations still in the tournament. Points: group win = 1, draw = 0.5. Knockouts: R32 = 1, R16 = 1, QF/SF/Final = 2. Own both teams in a match? Any decisive result scores the full win, a draw scores 0.5.</p>
   <div class="view-btn-wrap"><a class="view-btn" href="#/fixtures">View Fixtures</a></div>
   ${bracketHtml || ''}
   ${wcBlock}`;
@@ -269,10 +269,10 @@ export function renderBracket(b) {
 
   // QF–Final panel: QF pairs → SF, then SF pair → Final
   const kohtml = `
-    <p class="bm-stage-lbl">Quarter-Finals → Semi-Finals <span class="round-pts">3 pts</span></p>
+    <p class="bm-stage-lbl">Quarter-Finals → Semi-Finals <span class="round-pts">2 pts</span></p>
     ${mbRow(qf[0], qf[1], sf[0])}
     ${mbRow(qf[2], qf[3], sf[1])}
-    <p class="bm-stage-lbl">Semi-Finals → Final <span class="round-pts">4 pts</span></p>
+    <p class="bm-stage-lbl">Semi-Finals → Final <span class="round-pts">2 pts</span></p>
     ${mbRow(sf[0], sf[1], fin[0])}
     ${b.thirdPlace ? `<p class="bm-stage-lbl">3rd Place <span class="round-pts">–</span></p><div class="mb-solo">${koMatch(b.thirdPlace)}</div>` : ''}`;
 
@@ -280,7 +280,7 @@ export function renderBracket(b) {
   <div class="bracket-hdr">
     <h1>Bracket</h1>
     ${b.hasAny
-      ? `<p class="hint">Advancing team highlighted. Points: R32=1, R16=2, QF=3, SF=4, Final=5.</p>`
+      ? `<p class="hint">Advancing team highlighted. Points: R32=1, R16=1, QF/SF/Final=2.</p>`
       : `<p class="hint">Bracket fills in after the group stage.</p>`}
   </div>
   <div class="bkt-page">
