@@ -665,14 +665,6 @@ export function renderAdmin({ groups, players, teams, settings, mode, notice, pr
 
   <section class="card">
     <h2>Settings</h2>
-    <form data-action="settings" class="form">
-      <label class="checkbox">
-        <input type="checkbox" name="scoreThirdPlace" ${settings.score_third_place ? 'checked' : ''} />
-        Score the third-place playoff (1 point)
-      </label>
-      <button type="submit">Save settings</button>
-    </form>
-    <hr />
     <form data-action="draft-reset"><button class="danger">Reset draft (clears all picks)</button></form>
   </section>
 

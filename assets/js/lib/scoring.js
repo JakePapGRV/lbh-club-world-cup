@@ -5,7 +5,7 @@
 //   - Knockout win points: R32 = 1, then R16/QF/SF/Final = 2.
 //   - Knockouts decided by penalties: the advancing team takes the FULL win
 //     points (there is no 0.5 outside the group stage).
-//   - Third-place playoff: scored as a 1-point win (configurable on/off).
+//   - Third-place (bronze) playoff: no points awarded.
 //   - Own-vs-own (one player owns both teams in a fixture): a guaranteed
 //     result. A draw scores 0.5; any decisive result scores the full win
 //     points (the player is certain to own whichever team wins).
@@ -19,7 +19,7 @@ export const DEFAULT_STAGE_POINTS = {
   R16: 2,
   QF: 2,
   SF: 2,
-  third: 1, // third-place playoff scored as a 1-point win
+  third: 0, // third-place (bronze) playoff awards no points
   final: 2,
 };
 

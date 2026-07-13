@@ -3,7 +3,7 @@
 // rules engine (lib/scoring.js, lib/draft.js).
 
 import { buildPickSequence } from './lib/draft.js?v=2';
-import { computeLadder, DEFAULT_STAGE_POINTS } from './lib/scoring.js?v=5';
+import { computeLadder, DEFAULT_STAGE_POINTS } from './lib/scoring.js?v=6';
 import { TEAMS_PER_PLAYER } from './lib/teams.js?v=2';
 
 const DISPLAY_TZ = 'Australia/Sydney';
@@ -305,7 +305,8 @@ export function getLadder(data, bonusByPlayer = []) {
     .filter((f) => f.status === 'finished')
     .map((f) => ({ id: f.id, stage: f.stage, homeTeamId: f.home_team_id, awayTeamId: f.away_team_id, homeScore: f.home_score, awayScore: f.away_score, winnerTeamId: f.winner_team_id }));
 
-  const stagePoints = { ...DEFAULT_STAGE_POINTS, third: data.settings.score_third_place ? 1 : 0 };
+  // Third-place (bronze) playoff awards no points.
+  const stagePoints = { ...DEFAULT_STAGE_POINTS, third: 0 };
   const totals = computeLadder(finished, { ownership, stagePoints });
 
   const alive = survivingTeams(data.fixtures);

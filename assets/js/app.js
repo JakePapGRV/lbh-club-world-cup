@@ -2,8 +2,8 @@
 // Pages base path with no server rewrites.
 
 import { store } from './store.js?v=17';
-import { getLadder, getFixturesView, getBracket, getDraftState, getTeamsView, getPlayerView, getTeamView, getTipLadder, getTipsView, getGroupStandings, getGroupPositions, resolveEspnSlot } from './compute.js?v=39';
-import { renderLadder, renderFixtures, renderBracket, renderDraft, renderAdmin, renderLogin, renderTeamsOverview, renderPlayerView, renderTeamView, renderTips, renderIdentityGate } from './views.js?v=60';
+import { getLadder, getFixturesView, getBracket, getDraftState, getTeamsView, getPlayerView, getTeamView, getTipLadder, getTipsView, getGroupStandings, getGroupPositions, resolveEspnSlot } from './compute.js?v=40';
+import { renderLadder, renderFixtures, renderBracket, renderDraft, renderAdmin, renderLogin, renderTeamsOverview, renderPlayerView, renderTeamView, renderTips, renderIdentityGate } from './views.js?v=61';
 
 const root = document.getElementById('root');
 
@@ -457,9 +457,6 @@ root.addEventListener('submit', (e) => {
     const map = {};
     for (const [k, v] of fd.entries()) if (k.startsWith('player_')) map[k.slice(7)] = v;
     run(async () => { await store.updatePlayerNames(map); flash = { notice: 'Player names saved.' }; });
-  } else if (action === 'settings') {
-    const on = fd.get('scoreThirdPlace') != null;
-    run(async () => { await store.setThirdPlace(on); flash = { notice: 'Settings saved.' }; });
   } else if (action === 'add-fixture') {
     const stage = fd.get('stage');
     const homeTeamId = Number(fd.get('homeTeamId'));
